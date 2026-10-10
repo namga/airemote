@@ -40,3 +40,26 @@ This environment does not include Android SDK/Gradle and cannot download build d
 5. Extract the artifact ZIP to get `app-debug.apk`, then install it on Android. You may need to allow installation from that source.
 
 This produces a debug APK for testing, not a Play Store release. The Sharp encoder is deliberately not enabled until the exact AC/remote model and protocol are verified. The current experimental Daikin encoder is not verified on real hardware either.
+
+
+## Build APK bằng GitHub Actions (đã đặt workflow ở đúng vị trí)
+
+**Quan trọng:** Khi tạo repository GitHub, hãy tải lên các tệp/thư mục nằm ngay trong ZIP này. Không đặt toàn bộ dự án lồng trong một thư mục con. Sau khi tải lên, repository phải hiển thị `.github/workflows/build-apk.yml` ở cấp gốc, cùng cấp với `android/`.
+
+1. Tạo repository GitHub và đưa toàn bộ nội dung ZIP này lên nhánh mặc định (thường là `main`). Thư mục `.github` có thể bị ẩn trên máy tính; bật hiển thị file ẩn nếu cần.
+2. Mở **Actions**. Nếu GitHub hỏi cho phép Actions, hãy bật cho repository.
+3. Chọn workflow **Build Android APK** ở cột bên trái. Nếu không thấy, vào tab **Code** và xác nhận `.github/workflows/build-apk.yml` đã nằm ở cấp gốc trên nhánh mặc định.
+4. Nhấn **Run workflow**. Workflow cũng chạy khi có commit thay đổi trong `android/` hoặc chính file workflow.
+5. Khi chạy thành công, mở run → **Artifacts** → tải `UniversalACRemote-debug-apk`; giải nén để lấy `app-debug.apk`.
+
+Nếu workflow không xuất hiện: GitHub chỉ nhận workflow từ thư mục chính xác `.github/workflows/` ở cấp gốc repository, và file YAML phải được commit lên nhánh mặc định. Nếu workflow xuất hiện nhưng build thất bại, mở run để xem log lỗi; việc có workflow không đảm bảo mã Android đã build thành công.
+
+## UI refresh
+The Android UI has rounded cards, improved spacing, larger temperature controls, responsive scrolling, a visible power status, and automatic local saving. Target SDK is 34 to avoid forced edge-to-edge overlap while explicit window insets are not implemented.
+
+Sharp IR is intentionally not enabled without an exact model/protocol match. A successful build does not prove IR compatibility on a real air conditioner.
+
+## Shared design update
+The web/PWA uses the reference design in `web/style.css`; Android native UI was aligned to the same rounded white cards, pale background, amber accent, large temperature controls, mode/fan selectors, and IR diagnostic messaging. Android preferences persist locally. The Android app and web page still use separate rendering code, so future visual changes should be applied to both implementations.
+
+The Sharp encoder is intentionally not enabled without an exact model/protocol match. Build success does not prove IR compatibility on a real air conditioner.
