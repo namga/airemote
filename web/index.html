@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#eaf7fa"><meta name="description" content="Giao diện điều khiển máy lạnh đa thương hiệu">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><link rel="stylesheet" href="style.css"><title>Universal AC Remote</title></head>
+<body><main class="app">
+<header><div class="brandmark" aria-hidden="true">❄</div><div class="heading"><h1>Điều khiển máy lạnh</h1><p>Không gian mát lành của bạn</p></div><span class="pill">AC REMOTE</span></header>
+<section class="settings card" aria-labelledby="settings-title">
+  <details id="appearance">
+    <summary><span class="settings-icon" aria-hidden="true">⚙</span><span><strong id="settings-title">Cá nhân hóa giao diện</strong><small>Chọn màu sắc và cỡ chữ dễ nhìn</small></span><span class="chevron" aria-hidden="true">⌄</span></summary>
+    <div class="settings-body">
+      <fieldset><legend>Màu giao diện</legend><div class="palette" role="group" aria-label="Chọn màu giao diện">
+        <button type="button" class="swatch selected" data-accent="ocean" aria-label="Xanh biển" title="Xanh biển"><span></span><small>Xanh biển</small></button>
+        <button type="button" class="swatch" data-accent="mint" aria-label="Xanh lá" title="Xanh lá"><span></span><small>Xanh lá</small></button>
+        <button type="button" class="swatch" data-accent="lavender" aria-label="Tím dịu" title="Tím dịu"><span></span><small>Tím dịu</small></button>
+        <button type="button" class="swatch" data-accent="rose" aria-label="Hồng đào" title="Hồng đào"><span></span><small>Hồng đào</small></button>
+        <button type="button" class="swatch" data-accent="amber" aria-label="Vàng ấm" title="Vàng ấm"><span></span><small>Vàng ấm</small></button>
+      </div></fieldset>
+      <fieldset><legend>Cỡ chữ</legend><div class="font-options" role="group" aria-label="Chọn cỡ chữ">
+        <button type="button" data-font="small"><span class="font-preview small-a">A</span><span>Nhỏ</span></button>
+        <button type="button" data-font="normal" class="selected"><span class="font-preview">A</span><span>Vừa</span></button>
+        <button type="button" data-font="large"><span class="font-preview large-a">A</span><span>Lớn</span></button>
+      </div></fieldset>
+      <button type="button" id="resetAppearance" class="reset-settings">Khôi phục mặc định</button>
+    </div>
+  </details>
+</section>
+<section class="room"><div class="eyebrow">ĐIỀU KHIỂN PHÒNG</div><label class="brand-select" for="brand">Hãng máy lạnh<select id="brand"><option>Daikin</option><option>Panasonic</option><option>LG</option><option>Samsung</option><option>Mitsubishi Electric</option><option>Toshiba</option><option>Sharp</option><option>Gree</option><option>Midea</option><option>AUX</option><option>Khác</option></select></label><div class="status" id="status">Đang tắt</div><div class="temperature"><button id="minus" aria-label="Giảm nhiệt độ">−</button><div><strong id="temp">24</strong><span>°C</span></div><button id="plus" aria-label="Tăng nhiệt độ">+</button></div><div class="range">16°C <div class="track"><div id="trackfill"></div></div> 30°C</div><button id="power" class="power"><span>⏻</span><span id="powerText">Bật máy lạnh</span></button></section>
+<section class="controls"><h2>Chọn chế độ</h2><div class="mode-grid"><button data-mode="COOL" class="mode selected"><b>❄</b><span>Làm lạnh</span></button><button data-mode="DRY" class="mode"><b>◌</b><span>Hút ẩm</span></button><button data-mode="FAN" class="mode"><b>〰</b><span>Quạt</span></button><button data-mode="HEAT" class="mode"><b>☀</b><span>Sưởi</span></button></div><h2>Tốc độ quạt</h2><div class="fans"><button data-fan="AUTO" class="selected">Tự động</button><button data-fan="LOW">Thấp</button><button data-fan="MED">Vừa</button><button data-fan="HIGH">Cao</button></div></section>
+<section class="foot"><span class="dot"></span><span id="hint">Web không phát IR trực tiếp · encoder IR cần xác minh theo model</span><button id="install" hidden>Cài ứng dụng</button></section>
+<footer>AC Remote <span>•</span> Đơn giản, tiện nghi mỗi ngày</footer>
+</main><script src="app.js"></script></body></html>
