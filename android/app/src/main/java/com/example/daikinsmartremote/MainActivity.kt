@@ -47,13 +47,28 @@ class MainActivity : Activity() {
     }
 
     inner class AndroidRemoteBridge {
-        // Common carrier-frequency references seen in consumer IR protocols.
-        // These are protocol references, NOT a claim that this phone supports every value.
-        private val commonFrequencyReferences = listOf(
-            "36 kHz — Philips RC-5/RC-6 (protocol reference)",
-            "38 kHz — NEC/Samsung and many consumer remotes (common reference)",
-            "40 kHz — Sony SIRC and some other remotes (protocol reference)"
+        // Brand-specific reference notes. These are nominal protocol references, NOT
+        // measured device capabilities and NOT proof that a particular AC model uses them.
+        private data class BrandIrReference(val carrier: String, val protocols: String, val note: String)
+        private val brandIrReferences = mapOf(
+            "Sharp" to BrandIrReference("38 kHz (tham khảo phổ biến)", "SHARP / SHARP_AC", "Giao thức và biến thể phụ thuộc remote/model."),
+            "Mitsubishi Electric" to BrandIrReference("38 kHz (tham khảo phổ biến)", "MITSUBISHI_AC / MITSUBISHI", "Có nhiều họ giao thức; không suy ra model chỉ từ hãng."),
+            "Casper" to BrandIrReference("Chưa xác minh riêng cho Casper; 38 kHz chỉ là mốc tham khảo chung", "Chưa xác minh giao thức Casper riêng", "Có thể dùng nền tảng/OEM khác nhau tùy model."),
+            "Midea" to BrandIrReference("38 kHz (tham khảo phổ biến)", "MIDEA / MIDEA24 / một số thiết bị tương thích COOLIX", "Không phải mọi model Midea đều dùng cùng biến thể."),
+            "Daikin" to BrandIrReference("38 kHz (tham khảo phổ biến)", "DAIKIN và nhiều biến thể DAIKINxx", "Daikin có nhiều định dạng lệnh và độ dài gói khác nhau."),
+            "LG" to BrandIrReference("38 kHz (tham khảo phổ biến)", "LG / LG2", "Biến thể giao thức phụ thuộc dòng remote/model.")
         )
+        private val commonFrequencyReferences = listOf(
+            "36 kHz — tham khảo giao thức Philips RC-5/RC-6",
+            "38 kHz — mốc phổ biến ở nhiều remote dân dụng, bao gồm một số giao thức điều hòa",
+            "40 kHz — tham khảo giao thức Sony SIRC và một số thiết bị khác"
+        )
+
+        private fun brandReferenceText(brand: String): String {
+            val ref = brandIrReferences[brand]
+                ?: return "$brand: chưa có tham chiếu tần số/giao thức riêng đã xác minh; 36/38/40 kHz chỉ là các mốc tham khảo chung."
+            return "$brand — tần số: ${ref.carrier}; họ giao thức tham khảo: ${ref.protocols}. ${ref.note} Đây không phải dữ liệu đo từ điện thoại hoặc xác nhận tương thích model."
+        }
 
         @JavascriptInterface
         fun sendState(json: String): String {
@@ -73,8 +88,15 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
+        fun setBrand(brand: String) {
+            prefs.edit().putString("brand", brand.take(64)).apply()
+        }
+
+        @JavascriptInterface
         fun checkIr(): String {
             val manager = ir ?: return "KHÔNG KIỂM TRA ĐƯỢC: Android không cung cấp dịch vụ Consumer IR cho ứng dụng. Chưa gửi tín hiệu."
+            val selectedBrand = prefs.getString("brand", "Daikin") ?: "Daikin"
+            val selectedBrandReference = brandReferenceText(selectedBrand)
             return try {
                 if (!manager.hasIrEmitter()) {
                     "KẾT QUẢ: Android báo không có bộ phát IR. Chưa gửi tín hiệu. Hãy kiểm tra đúng thiết bị/ROM; ứng dụng không thể tự bật phần cứng IR."
@@ -82,8 +104,8 @@ class MainActivity : Activity() {
                     // null means the IR service query failed; an empty array means no ranges were reported.
                     val ranges = manager.carrierFrequencies
                     when {
-                        ranges == null -> "PHÁT HIỆN BỘ PHÁT IR, NHƯNG KHÔNG ĐỌC ĐƯỢC DẢI TẦN: dịch vụ Consumer IR trả về null. Tần số tham khảo của giao thức remote phổ biến (không phải dải tần đã xác nhận của điện thoại): ${commonFrequencyReferences.joinToString("; ")}. Chưa gửi tín hiệu."
-                        ranges.isEmpty() -> "PHÁT HIỆN BỘ PHÁT IR, NHƯNG ANDROID KHÔNG CUNG CẤP DẢI TẦN NÀO. Tần số tham khảo của giao thức remote phổ biến (chưa xác nhận điện thoại hỗ trợ): ${commonFrequencyReferences.joinToString("; ")}. Chưa gửi tín hiệu."
+                        ranges == null -> "PHÁT HIỆN BỘ PHÁT IR, NHƯNG KHÔNG ĐỌC ĐƯỢC DẢI TẦN: dịch vụ Consumer IR trả về null. Tần số tham khảo của giao thức remote phổ biến (không phải dải tần đã xác nhận của điện thoại): ${commonFrequencyReferences.joinToString("; ")}. $selectedBrandReference Chưa gửi tín hiệu."
+                        ranges.isEmpty() -> "PHÁT HIỆN BỘ PHÁT IR, NHƯNG ANDROID KHÔNG CUNG CẤP DẢI TẦN NÀO. Tần số tham khảo của giao thức remote phổ biến (chưa xác nhận điện thoại hỗ trợ): ${commonFrequencyReferences.joinToString("; ")}. $selectedBrandReference Chưa gửi tín hiệu."
                         else -> {
                             val readable = ranges.joinToString(separator = "; ") {
                                 "${it.minFrequency / 1000.0}–${it.maxFrequency / 1000.0} kHz"
@@ -91,7 +113,7 @@ class MainActivity : Activity() {
                             val candidateFrequencies = listOf(36000, 38000, 40000).filter { hz ->
                                 ranges.any { hz in it.minFrequency..it.maxFrequency }
                             }.joinToString(", ") { "${it / 1000} kHz" }.ifBlank { "không có tần số tham khảo phổ biến nào nằm trong dải đã báo" }
-                            "PHÁT HIỆN BỘ PHÁT IR. Dải tần Android báo hỗ trợ: $readable. Tần số tham khảo phổ biến nằm trong dải này: $candidateFrequencies. Tham khảo giao thức: ${commonFrequencyReferences.joinToString("; ")}. Đây không phải xác nhận giao thức của máy lạnh; chưa gửi tín hiệu và chưa xác nhận máy lạnh nhận lệnh."
+                            "PHÁT HIỆN BỘ PHÁT IR. Dải tần Android báo hỗ trợ: $readable. Tần số tham khảo phổ biến nằm trong dải này: $candidateFrequencies. Tham khảo giao thức: ${commonFrequencyReferences.joinToString("; ")}. $selectedBrandReference Chưa gửi tín hiệu và chưa xác nhận máy lạnh nhận lệnh."
                         }
                     }
                 }

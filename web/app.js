@@ -24,7 +24,7 @@ function render(){
   document.querySelectorAll("[data-fan]").forEach(b=>{const selected=b.dataset.fan===state.fan;b.classList.toggle("selected",selected);b.setAttribute("aria-pressed",String(selected))});
   applyAppearance();
 }
-$("#minus").onclick=()=>{state.temp=Math.max(16,state.temp-1);save()};$("#plus").onclick=()=>{state.temp=Math.min(30,state.temp+1);save()};$("#brand").onchange=e=>{state.brand=e.target.value;save();$("#hint").textContent=state.brand==="Sharp"?"Sharp cần model dàn lạnh/remote; web không phát IR":"Đã chọn "+state.brand+" · web không phát IR trực tiếp"};$("#power").onclick=()=>{state.power=!state.power;save();
+$("#minus").onclick=()=>{state.temp=Math.max(16,state.temp-1);save()};$("#plus").onclick=()=>{state.temp=Math.min(30,state.temp+1);save()};$("#brand").onchange=e=>{state.brand=e.target.value;save();if(window.AndroidACRemote&&typeof window.AndroidACRemote.setBrand==="function"){try{window.AndroidACRemote.setBrand(state.brand)}catch{}}$("#hint").textContent="Đã chọn "+state.brand+(window.AndroidACRemote?" · nhấn Kiểm tra IR để xem tần số tham khảo":" · web không phát IR trực tiếp")};$("#power").onclick=()=>{state.power=!state.power;save();
   if(window.AndroidACRemote && typeof window.AndroidACRemote.sendState === "function"){
     try { const result=window.AndroidACRemote.sendState(JSON.stringify(state)); $("#hint").textContent=result || "Đã gửi yêu cầu tới bộ phát IR"; }
     catch(e){ $("#hint").textContent="Không thể gửi lệnh IR trên thiết bị này."; }
