@@ -13,6 +13,8 @@ import org.json.JSONObject
 
 /** Android uses the exact same bundled HTML/CSS/JS as the web/PWA build. */
 class MainActivity : Activity() {
+    private data class BrandIrReference(val carrier: String, val protocols: String, val note: String)
+
     private var ir: ConsumerIrManager? = null
     private lateinit var webView: WebView
     private val prefs by lazy { getSharedPreferences("ac_remote", Context.MODE_PRIVATE) }
@@ -49,7 +51,6 @@ class MainActivity : Activity() {
     inner class AndroidRemoteBridge {
         // Brand-specific reference notes. These are nominal protocol references, NOT
         // measured device capabilities and NOT proof that a particular AC model uses them.
-        private data class BrandIrReference(val carrier: String, val protocols: String, val note: String)
         private val brandIrReferences = mapOf(
             "Sharp" to BrandIrReference("38 kHz (tham khảo phổ biến)", "SHARP / SHARP_AC", "Giao thức và biến thể phụ thuộc remote/model."),
             "Mitsubishi Electric" to BrandIrReference("38 kHz (tham khảo phổ biến)", "MITSUBISHI_AC / MITSUBISHI", "Có nhiều họ giao thức; không suy ra model chỉ từ hãng."),
