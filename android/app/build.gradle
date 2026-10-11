@@ -2,14 +2,26 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
+
 android {
     namespace 'com.example.daikinsmartremote'
     compileSdk 35
+
     defaultConfig {
         applicationId 'com.example.daikinsmartremote'
         minSdk 23
         targetSdk 34
-        versionCode 7
-        versionName '1.3.0'
+        versionCode 8
+        versionName '1.3.1'
+    }
+
+    // Keep Java and Kotlin bytecode targets aligned.
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
     }
 }

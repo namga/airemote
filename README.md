@@ -72,7 +72,7 @@ Bản source này dùng Android versionName `1.2.3` / versionCode `3`. Sau khi G
 Updated Android launcher icons (legacy and adaptive) and web/PWA icons to the new blue air-conditioner remote artwork. Android package version: 1.2.3 (versionCode 6).
 
 
-## IR diagnostics and protocol status (v1.3.0)
+## IR diagnostics and protocol status (v1.3.1)
 
 - The Android app now exposes **Kiểm tra IR** to query `ConsumerIrManager`, whether Android reports an IR emitter, and supported carrier-frequency ranges. This checks reported hardware capability only; it does not prove an emitted pulse was optically measured or that an AC received it.
 - A browser/PWA cannot access the phone's Android Consumer IR API; the diagnostic button explains this limitation.
