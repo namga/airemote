@@ -17,16 +17,32 @@ internal object MideaIr {
     private const val FRAME_GAP_US = 5_600
     private const val MIDEA_HEADER_AND_COMMAND_TYPE = 0xA1L
 
-    /** Test vector from the upstream Midea implementation; checksum byte is zeroed before calculation. */
+    /** Known reset-state vector from upstream IRremoteESP8266 (checksum byte zeroed). */
     fun checksumSelfTest(): Boolean = calcChecksum(0xA1826FFFFF00L) == 0x62
+
+    /** Checks that the Celsius temperature byte has Fahrenheit/reserved bits cleared. */
+    fun stateLayoutSelfTest(): Boolean {
+        val state = buildState(true, 27, "COOL", "AUTO")
+        val tempByte = ((state ushr 24) and 0xFF).toInt()
+        val headerByte = ((state ushr 40) and 0xFF).toInt()
+        return tempByte == 10 && headerByte == 0xA1 && (state and 0xFF).toInt() == calcChecksum(state)
+    }
 
     fun describePattern(pattern: IntArray): String {
         val totalUs = pattern.sumOf { it.toLong() }
-        return "${pattern.size} durations, ${(totalUs / 1000.0).toInt()} ms, checksum vector=${if (checksumSelfTest()) "PASS" else "FAIL"}"
+        return "${pattern.size} durations, ${(totalUs / 1000.0).toInt()} ms, checksum=${if (checksumSelfTest()) "PASS" else "FAIL"}, layout=${if (stateLayoutSelfTest()) "PASS" else "FAIL"}"
     }
 
     /** Returns alternating mark/space durations accepted by ConsumerIrManager. */
     fun buildPattern(power: Boolean, temperature: Int, mode: String, fan: String): IntArray {
+        val state = buildState(power, temperature, mode, fan)
+        val timings = ArrayList<Int>(400)
+        appendFrame(timings, state)
+        appendFrame(timings, state xor 0xFFFFFFFFFFFFL)
+        return timings.toIntArray()
+    }
+
+    private fun buildState(power: Boolean, temperature: Int, mode: String, fan: String): Long {
         val tempOffset = temperature.coerceIn(17, 30) - 17
         val modeBits = when (mode.uppercase()) {
             "COOL" -> 0
@@ -43,25 +59,21 @@ internal object MideaIr {
             else -> 0 // Auto
         }
 
-        // Midea native state, ordered as transmitted: A1 | mode/fan/power |
-        // temperature flags/value | off-timer/beep byte | sensor-temp byte | sum.
-        // The reference reset vector 0xA1826FFFFF62 verifies this byte order and
-        // checksum implementation. For Celsius, bit 5 (Fahrenheit) is clear;
-        // the reserved high bit in the temperature byte is retained as in the
-        // library's native representation.
+        // Midea native state, bytes from most to least significant:
+        // header/type | power/sleep/unknown/fan/mode | temp/Fahrenheit |
+        // off-timer/beep | sensor-temp | checksum.
+        // Important: Celsius temperature occupies only bits 0..4. Bit 5 is
+        // Fahrenheit; bits 6..7 are reserved and must be zero. The prior
+        // encoder incorrectly set bit 6 (0x40), making every Celsius command
+        // malformed for the standard Midea protocol.
         val modeFanPower = ((if (power) 0x80 else 0) or (fanBits shl 3) or modeBits).toLong()
-        val tempByte = (0x40 or tempOffset).toLong()
+        val tempByte = tempOffset.toLong() // Celsius: Fahrenheit and reserved bits cleared.
         var state = (MIDEA_HEADER_AND_COMMAND_TYPE shl 40) or
             (modeFanPower shl 32) or
             (tempByte shl 24) or
             (0xFFFFL shl 8)
         val checksum = calcChecksum(state)
-        state = state or checksum.toLong()
-
-        val timings = ArrayList<Int>(400)
-        appendFrame(timings, state)
-        appendFrame(timings, state xor 0xFFFFFFFFFFFFL)
-        return timings.toIntArray()
+        return state or checksum.toLong()
     }
 
     private fun appendFrame(out: MutableList<Int>, value: Long) {

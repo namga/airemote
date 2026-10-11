@@ -166,10 +166,11 @@ class MainActivity : Activity() {
         @JavascriptInterface
         fun mideaProtocolSelfTest(): String {
             val vectorOk = MideaIr.checksumSelfTest()
+            val layoutOk = MideaIr.stateLayoutSelfTest()
             val pattern = MideaIr.buildPattern(true, 27, "COOL", "AUTO")
             val duration = pattern.sumOf { it.toLong() }
             val safe = pattern.isNotEmpty() && pattern.all { it > 0 } && duration < 1_900_000L
-            return "Midea offline self-test: checksum vector ${if (vectorOk) "PASS" else "FAIL"}; waveform ${if (safe) "PASS" else "FAIL"} (${MideaIr.describePattern(pattern)}). Đây là kiểm thử phần mềm, không xác nhận tương thích máy lạnh."
+            return "Midea offline self-test: checksum ${if (vectorOk) "PASS" else "FAIL"}; state layout ${if (layoutOk) "PASS" else "FAIL"}; waveform ${if (safe) "PASS" else "FAIL"} (${MideaIr.describePattern(pattern)}). PASS chỉ xác nhận kiểm tra phần mềm, không xác nhận máy lạnh nhận lệnh."
         }
 
         /** Phone-only IR capture is unsupported by the public Android ConsumerIrManager API. */

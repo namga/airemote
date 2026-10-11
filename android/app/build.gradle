@@ -11,8 +11,8 @@ android {
         applicationId 'com.example.daikinsmartremote'
         minSdk 23
         targetSdk 34
-        versionCode 21
-        versionName '1.5.3'
+        versionCode 22
+        versionName '1.5.4'
     }
 
     // Keep Java and Kotlin bytecode targets aligned.
