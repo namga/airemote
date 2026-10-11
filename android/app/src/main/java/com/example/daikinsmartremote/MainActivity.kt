@@ -377,12 +377,10 @@ class MainActivity : Activity() {
     private fun transmit(brand: String, power: Boolean, temperature: Int, mode: String, fan: String): String {
         val manager = ir ?: return "Không phát hiện dịch vụ Consumer IR của Android."
         if (!manager.hasIrEmitter()) return "Android không phát hiện bộ phát IR. Chưa gửi lệnh."
-        val ranges = try { manager.carrierFrequencies } catch (_: Exception) { null }
-        if (ranges.isNullOrEmpty()) return "Điện thoại không cung cấp dải tần IR để xác minh; chưa phát lệnh."
-        if (ranges.none { 38000 in it.minFrequency..it.maxFrequency }) {
-            return "Dải tần IR mà Android báo không xác nhận 38 kHz; chưa phát lệnh Midea."
-        }
-        if (!brand.equals("Midea", ignoreCase = true)) {
+        // carrierFrequencies is advisory and may be null/empty on OEM ROMs. Xiaomi's
+        // stock remote working is strong practical evidence that the handset has an IR path;
+        // let ConsumerIrManager.transmit decide rather than rejecting the command pre-emptively.
+        if (!brand.equals("Midea", ignoreCase = true) && !brand.equals("Media", ignoreCase = true)) {
             return "${brand}: encoder riêng chưa được tích hợp ở bản này. Chưa phát lệnh; không dùng chung giao thức Daikin."
         }
         return try {
@@ -391,7 +389,7 @@ class MainActivity : Activity() {
                 return "Mẫu Midea vượt giới hạn phát an toàn của Android. Chưa phát."
             }
             manager.transmit(38000, pattern)
-            "Đã gửi yêu cầu phát IR Midea ở 38 kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). Đây là kết quả API phát, chưa xác nhận máy lạnh đã nhận lệnh. Nếu chưa phản hồi, giao thức/biến thể Midea của model có thể khác."
+            "Android đã hoàn tất lệnh phát IR Midea 38 kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). Điều này chỉ xác nhận API phát đã chạy, không xác nhận máy lạnh nhận lệnh. Nếu máy vẫn im lặng, có thể biến thể Midea khác với giao thức chuẩn đang được thử."
         } catch (e: Exception) {
             "Phát IR Midea thất bại: ${e.message ?: e.javaClass.simpleName}."
         }

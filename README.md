@@ -147,3 +147,9 @@ Moved `BrandIrReference` out of the `inner class AndroidRemoteBridge` into the e
 - Compatibility boundary: this is a generic BLE/GATT client, not a universal adapter for every Bluetooth IR learner. The specific device must expose its signal through a readable/notifiable GATT characteristic. Proprietary serial-over-Bluetooth, Bluetooth Classic SPP, unknown binary formats, encrypted payloads, and device-specific command handshakes may need a model-specific driver.
 - Android phone IR blaster is transmit-only through the public `ConsumerIrManager` API; this app does not claim that the Xiaomi 17 itself can receive IR.
 - Validation performed for this source package: manifest/permissions, version/workflow consistency, JS syntax and ZIP integrity. A full Gradle build and physical BLE hardware test have not been performed in this environment.
+
+
+## v1.5.1 IR transmission fix
+- Removed the hard block that refused Midea commands when Android's optional `getCarrierFrequencies()` query returned null/empty or did not list 38 kHz. The built-in Xiaomi remote may work even when this query is incomplete; `hasIrEmitter()` and `transmit()` remain the runtime checks.
+- The same optional-frequency-query block was removed for manually imported raw IR patterns.
+- This does not guarantee protocol/model compatibility. If the AC still does not react, capture a known Midea command from a compatible IR learner or identify the exact remote/model; the phone's own IR blaster cannot receive IR through Android's public ConsumerIrManager API.
