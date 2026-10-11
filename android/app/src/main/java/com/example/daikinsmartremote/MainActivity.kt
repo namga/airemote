@@ -141,6 +141,37 @@ class MainActivity : Activity() {
             }
         }
 
+        /** Short harmless carrier burst for a quick emitter-path check; not an AC command. */
+        @JavascriptInterface
+        fun testIrPulse(): String {
+            val manager = ir ?: return "TEST IR: Android không cung cấp dịch vụ Consumer IR. Chưa phát."
+            return try {
+                if (!manager.hasIrEmitter()) return "TEST IR: Android không phát hiện IR emitter. Chưa phát."
+                val ranges = manager.carrierFrequencies
+                val frequencySupported = ranges?.any { 38000 in it.minFrequency..it.maxFrequency }
+                // Short generic pulse train. This only checks the Android transmit path; it is not a valid Midea command.
+                val testPattern = intArrayOf(9000, 4500, 560, 560, 560, 1690, 560, 560, 560, 1690, 560, 560, 560, 1690, 560, 560)
+                manager.transmit(38000, testPattern)
+                val carrierNote = when (frequencySupported) {
+                    true -> "Android báo dải tần có 38 kHz."
+                    false -> "Android không báo dải 38 kHz; burst vẫn được gửi để kiểm tra API."
+                    null -> "Android không trả được dải tần; burst vẫn được gửi để kiểm tra API."
+                }
+                "TEST IR: API transmit() đã hoàn tất burst 38 kHz ngắn. $carrierNote Đây KHÔNG phải lệnh điều hòa. Hãy dùng camera điện thoại khác (ưu tiên camera trước) nhìn vào cửa sổ IR khi bấm test; nếu thấy chớp sáng chỉ xác nhận có phát quang IR, không xác nhận mã Midea đúng."
+            } catch (e: Exception) {
+                "TEST IR thất bại: ${e.message ?: e.javaClass.simpleName}"
+            }
+        }
+
+        @JavascriptInterface
+        fun mideaProtocolSelfTest(): String {
+            val vectorOk = MideaIr.checksumSelfTest()
+            val pattern = MideaIr.buildPattern(true, 27, "COOL", "AUTO")
+            val duration = pattern.sumOf { it.toLong() }
+            val safe = pattern.isNotEmpty() && pattern.all { it > 0 } && duration < 1_900_000L
+            return "Midea offline self-test: checksum vector ${if (vectorOk) "PASS" else "FAIL"}; waveform ${if (safe) "PASS" else "FAIL"} (${MideaIr.describePattern(pattern)}). Đây là kiểm thử phần mềm, không xác nhận tương thích máy lạnh."
+        }
+
         /** Phone-only IR capture is unsupported by the public Android ConsumerIrManager API. */
         @JavascriptInterface
         fun startIrCapture(): String = "KHÔNG THỂ BẮT TÍN HIỆU: Xiaomi 17/Android ConsumerIrManager chỉ cung cấp phát IR, không có API nhận tín hiệu từ remote gốc. Không có dữ liệu nào được thu. Bạn có thể dán/import dạng sóng thô đã có để phân tích và lưu."

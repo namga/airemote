@@ -43,6 +43,20 @@ installButton.onclick=async()=>{
 window.addEventListener("appinstalled",()=>{installButton.hidden=true;$("#hint").textContent="Đã cài ứng dụng vào thiết bị.";});
 if("serviceWorker"in navigator && location.protocol!=="file:")navigator.serviceWorker.register("./sw.js").catch(()=>{});
 const irCheckButton=$("#checkIr");
+const irPulseButton=$("#testIrPulse");
+if(irPulseButton) irPulseButton.addEventListener("click",()=>{
+  if(window.AndroidACRemote && typeof AndroidACRemote.testIrPulse === "function"){
+    try{$("#hint").textContent=AndroidACRemote.testIrPulse();}
+    catch(e){$("#hint").textContent=`Test IR lỗi: ${e.message||e}`;}
+  } else { $("#hint").textContent="Test phát IR chỉ hoạt động trong APK Android; trình duyệt/PWA không thể phát IR."; }
+});
+const mideaSelfTestButton=$("#mideaSelfTest");
+if(mideaSelfTestButton) mideaSelfTestButton.addEventListener("click",()=>{
+  if(window.AndroidACRemote && typeof AndroidACRemote.mideaProtocolSelfTest === "function"){
+    try{$("#hint").textContent=AndroidACRemote.mideaProtocolSelfTest();}
+    catch(e){$("#hint").textContent=`Midea self-test lỗi: ${e.message||e}`;}
+  } else { $("#hint").textContent="Midea self-test chỉ hoạt động trong APK Android."; }
+});
 if(irCheckButton){irCheckButton.onclick=()=>{
   if(window.AndroidACRemote && typeof window.AndroidACRemote.checkIr === "function"){
     try{$("#hint").textContent=window.AndroidACRemote.checkIr() || "Không có kết quả kiểm tra IR.";}

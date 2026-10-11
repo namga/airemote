@@ -1,4 +1,4 @@
-# Universal AC Remote v1.5.2 — Midea IR encoder correction (experimental)
+# Universal AC Remote v1.5.3 — Midea IR encoder correction (experimental)
 
 ## Important fix for the “button does nothing” report
 
@@ -6,7 +6,7 @@
 - v1.4.0 disables that unverified send path for **all brands** and reports why it did not send a command, instead of showing a misleading transmit-success result. This is an honesty/safety fix, not a claim that universal AC control is now working.
 - To enable actual control, add a model-specific encoder backed by a reliable protocol reference/test vectors, or import a compatible raw waveform from an external IR learning device. The built-in Xiaomi 17 IR emitter is transmit-only through Android's public API and cannot learn directly from the CHUNGHOP K-1038E remote.
 - The BLE learner UI is generic BLE/GATT only; it is not guaranteed to support every commercial learner or vendor-specific protocol.
-- Android version: `1.5.2` (`versionCode 20`). Source ZIP only; no APK was built in this environment and no physical Xiaomi 17/Midea test was performed.
+- Android version: `1.5.3` (`versionCode 21`). Source ZIP only; no APK was built in this environment and no physical Xiaomi 17/Midea test was performed.
 - Corrected the native Kotlin Midea 48-bit state layout and transmission framing: bytes are ordered as the public IRremoteESP8266 implementation, checksum is validated against its documented reset vector `0xA1826FFFFF62`, and the frame is followed by the bitwise-inverted payload. The previous encoder incorrectly packed the state bytes, temperature and repeat sequence. The app transmits only when Midea is selected; other brands remain blocked rather than reusing Daikin.
 - Compatibility is **experimental**. Midea variants/model-specific fields may differ; Android API completion is not proof the air conditioner received or accepted the command. If it does not respond, collect the indoor unit/remote model or compare against a captured known-good waveform.
 - Reference: IRremoteESP8266 `ir_Midea.cpp` / `ir_Midea.h` (Midea protocol support is explicitly described as alpha/needs testing).
@@ -153,3 +153,9 @@ Moved `BrandIrReference` out of the `inner class AndroidRemoteBridge` into the e
 - Removed the hard block that refused Midea commands when Android's optional `getCarrierFrequencies()` query returned null/empty or did not list 38 kHz. The built-in Xiaomi remote may work even when this query is incomplete; `hasIrEmitter()` and `transmit()` remain the runtime checks.
 - The same optional-frequency-query block was removed for manually imported raw IR patterns.
 - This does not guarantee protocol/model compatibility. If the AC still does not react, capture a known Midea command from a compatible IR learner or identify the exact remote/model; the phone's own IR blaster cannot receive IR through Android's public ConsumerIrManager API.
+
+
+## IR quick diagnostics v1.5.3
+- `Test nhanh phát IR` sends a short generic 38 kHz pulse train. It is not an air-conditioner command. A second phone camera may show the emitter flashing (front cameras often have less IR filtering), but no visible flash is not definitive because camera filters vary.
+- `Test mã Midea` runs an offline checksum test vector and validates that the generated pattern is positive and shorter than Android's 2-second transmit limit. It does not prove the target unit uses this Midea variant.
+- Android's `ConsumerIrManager.transmit()` returning means the API transmitted the pattern, not that the AC received it. The Midea encoder remains experimental until tested against this specific unit.

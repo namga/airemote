@@ -17,6 +17,14 @@ internal object MideaIr {
     private const val FRAME_GAP_US = 5_600
     private const val MIDEA_HEADER_AND_COMMAND_TYPE = 0xA1L
 
+    /** Test vector from the upstream Midea implementation; checksum byte is zeroed before calculation. */
+    fun checksumSelfTest(): Boolean = calcChecksum(0xA1826FFFFF00L) == 0x62
+
+    fun describePattern(pattern: IntArray): String {
+        val totalUs = pattern.sumOf { it.toLong() }
+        return "${pattern.size} durations, ${(totalUs / 1000.0).toInt()} ms, checksum vector=${if (checksumSelfTest()) "PASS" else "FAIL"}"
+    }
+
     /** Returns alternating mark/space durations accepted by ConsumerIrManager. */
     fun buildPattern(power: Boolean, temperature: Int, mode: String, fan: String): IntArray {
         val tempOffset = temperature.coerceIn(17, 30) - 17
