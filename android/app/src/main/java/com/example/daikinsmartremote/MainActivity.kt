@@ -375,19 +375,26 @@ class MainActivity : Activity() {
     }
 
     private fun transmit(brand: String, power: Boolean, temperature: Int, mode: String, fan: String): String {
-        val manager = ir ?: return "Không phát hiện bộ phát IR qua Android API."
-        if (!manager.hasIrEmitter()) return "KẾT QUẢ: Android không phát hiện bộ phát IR. Chưa gửi lệnh."
-        // The previous DaikinIr implementation used a placeholder state/checksum and was
-        // not a verified model encoder. Sending it created a misleading success path.
-        // Never transmit an invented AC state. Use transmitLearned() only with a valid,
-        // known-compatible raw capture, or add a model-specific encoder with test vectors.
-        val ranges = try { manager.carrierFrequencies } catch (e: Exception) { null }
-        val hardware = if (ranges.isNullOrEmpty()) {
-            "Android phát hiện IR nhưng không cung cấp dải tần để xác minh."
-        } else {
-            "Dải tần Android báo: " + ranges.joinToString { "${it.minFrequency}–${it.maxFrequency} Hz" } + "."
+        val manager = ir ?: return "Không phát hiện dịch vụ Consumer IR của Android."
+        if (!manager.hasIrEmitter()) return "Android không phát hiện bộ phát IR. Chưa gửi lệnh."
+        val ranges = try { manager.carrierFrequencies } catch (_: Exception) { null }
+        if (ranges.isNullOrEmpty()) return "Điện thoại không cung cấp dải tần IR để xác minh; chưa phát lệnh."
+        if (ranges.none { 38000 in it.minFrequency..it.maxFrequency }) {
+            return "Dải tần IR mà Android báo không xác nhận 38 kHz; chưa phát lệnh Midea."
         }
-        return "CHƯA GỬI LỆNH MÁY LẠNH: app chưa có encoder đã xác minh cho $brand; encoder Daikin cũ dùng trạng thái/checksum giả định và có thể phát sai mã. $hardware Cần mã giao thức đúng model hoặc dạng sóng IR đã thu bằng thiết bị học mã tương thích. Trạng thái trên giao diện chỉ là lựa chọn, không xác nhận máy lạnh đã đổi trạng thái."
+        if (!brand.equals("Midea", ignoreCase = true)) {
+            return "${brand}: encoder riêng chưa được tích hợp ở bản này. Chưa phát lệnh; không dùng chung giao thức Daikin."
+        }
+        return try {
+            val pattern = MideaIr.buildPattern(power, temperature, mode, fan)
+            if (pattern.size > 1000 || pattern.sumOf { it.toLong() } >= 1_900_000L) {
+                return "Mẫu Midea vượt giới hạn phát an toàn của Android. Chưa phát."
+            }
+            manager.transmit(38000, pattern)
+            "Đã gửi yêu cầu phát IR Midea ở 38 kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). Đây là kết quả API phát, chưa xác nhận máy lạnh đã nhận lệnh. Nếu chưa phản hồi, giao thức/biến thể Midea của model có thể khác."
+        } catch (e: Exception) {
+            "Phát IR Midea thất bại: ${e.message ?: e.javaClass.simpleName}."
+        }
     }
 
     @Deprecated("Deprecated in Android API")
