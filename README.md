@@ -1,4 +1,4 @@
-# Universal AC Remote v1.5.0 — Midea IR encoder (experimental)
+# Universal AC Remote v1.5.2 — Midea IR encoder correction (experimental)
 
 ## Important fix for the “button does nothing” report
 
@@ -6,8 +6,8 @@
 - v1.4.0 disables that unverified send path for **all brands** and reports why it did not send a command, instead of showing a misleading transmit-success result. This is an honesty/safety fix, not a claim that universal AC control is now working.
 - To enable actual control, add a model-specific encoder backed by a reliable protocol reference/test vectors, or import a compatible raw waveform from an external IR learning device. The built-in Xiaomi 17 IR emitter is transmit-only through Android's public API and cannot learn directly from the CHUNGHOP K-1038E remote.
 - The BLE learner UI is generic BLE/GATT only; it is not guaranteed to support every commercial learner or vendor-specific protocol.
-- Android version: `1.5.0` (`versionCode 18`). Source ZIP only; no APK was built in this environment and no physical Xiaomi 17/Midea test was performed.
-- Added a native Kotlin Midea 48-bit frame encoder using 38 kHz, Midea frame timing, inverted follow-up frame, and checksum logic based on the public IRremoteESP8266 implementation. The app transmits only when Midea is selected; other brands remain blocked rather than reusing Daikin.
+- Android version: `1.5.2` (`versionCode 20`). Source ZIP only; no APK was built in this environment and no physical Xiaomi 17/Midea test was performed.
+- Corrected the native Kotlin Midea 48-bit state layout and transmission framing: bytes are ordered as the public IRremoteESP8266 implementation, checksum is validated against its documented reset vector `0xA1826FFFFF62`, and the frame is followed by the bitwise-inverted payload. The previous encoder incorrectly packed the state bytes, temperature and repeat sequence. The app transmits only when Midea is selected; other brands remain blocked rather than reusing Daikin.
 - Compatibility is **experimental**. Midea variants/model-specific fields may differ; Android API completion is not proof the air conditioner received or accepted the command. If it does not respond, collect the indoor unit/remote model or compare against a captured known-good waveform.
 - Reference: IRremoteESP8266 `ir_Midea.cpp` / `ir_Midea.h` (Midea protocol support is explicitly described as alpha/needs testing).
 

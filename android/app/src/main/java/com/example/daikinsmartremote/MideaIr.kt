@@ -1,17 +1,25 @@
 package com.example.daikinsmartremote
 
 /**
- * Midea 48-bit state-frame encoder based on the public IRremoteESP8266 Midea
- * implementation (38 kHz, 4480 us header mark/space, 560 us bit mark,
- * 1680/560 us one/zero spaces, normal frame followed by inverted frame).
- * Midea support is still model-dependent; this is not a universal Midea guarantee.
+ * Midea 48-bit state encoder based on the public IRremoteESP8266 ir_Midea
+ * implementation. Standard Midea frames send a 48-bit state followed by its
+ * bitwise-inverted payload; each byte is transmitted MSB-first at 38 kHz.
+ * Compatibility remains model-dependent (the upstream implementation itself
+ * labels this protocol alpha), so this is not a universal Midea guarantee.
  */
 internal object MideaIr {
     private const val CARRIER_HZ = 38_000
-    private const val HEADER_BYTE = 0xA1L // Midea command type/header
+    private const val HEADER_MARK_US = 4_480
+    private const val HEADER_SPACE_US = 4_480
+    private const val BIT_MARK_US = 560
+    private const val ONE_SPACE_US = 1_680
+    private const val ZERO_SPACE_US = 560
+    private const val FRAME_GAP_US = 5_600
+    private const val MIDEA_HEADER_AND_COMMAND_TYPE = 0xA1L
 
+    /** Returns alternating mark/space durations accepted by ConsumerIrManager. */
     fun buildPattern(power: Boolean, temperature: Int, mode: String, fan: String): IntArray {
-        val temp = temperature.coerceIn(17, 30) - 17
+        val tempOffset = temperature.coerceIn(17, 30) - 17
         val modeBits = when (mode.uppercase()) {
             "COOL" -> 0
             "DRY" -> 1
@@ -22,44 +30,48 @@ internal object MideaIr {
         }
         val fanBits = when (fan.uppercase()) {
             "LOW" -> 1
-            "MED", "MEDIUM" -> 2
+            "MED", "MEDIUM", "NORMAL" -> 2
             "HIGH" -> 3
-            else -> 0
+            else -> 0 // Auto
         }
-        // Six bytes, MSB first: header/type, mode/fan/power, temperature,
-        // timer/beep, sensor/timer, checksum. 0xFF fields disable timers/sensor.
-        val header = HEADER_BYTE
-        val modeFanPower = (modeBits or (fanBits shl 3) or (if (power) 0x80 else 0)).toLong()
-        val tempByte = temp.toLong()
-        val bytes = longArrayOf(header, modeFanPower, tempByte, 0xFF, 0xFF, 0x00)
-        var raw = 0L
-        for (b in bytes) raw = (raw shl 8) or (b and 0xFF)
-        val checksum = calcChecksum(raw)
-        raw = (raw and 0xFFFFFFFFFFFFFF00UL.toLong()) or checksum.toLong()
+
+        // Midea native state, ordered as transmitted: A1 | mode/fan/power |
+        // temperature flags/value | off-timer/beep byte | sensor-temp byte | sum.
+        // The reference reset vector 0xA1826FFFFF62 verifies this byte order and
+        // checksum implementation. For Celsius, bit 5 (Fahrenheit) is clear;
+        // the reserved high bit in the temperature byte is retained as in the
+        // library's native representation.
+        val modeFanPower = ((if (power) 0x80 else 0) or (fanBits shl 3) or modeBits).toLong()
+        val tempByte = (0x40 or tempOffset).toLong()
+        var state = (MIDEA_HEADER_AND_COMMAND_TYPE shl 40) or
+            (modeFanPower shl 32) or
+            (tempByte shl 24) or
+            (0xFFFFL shl 8)
+        val checksum = calcChecksum(state)
+        state = state or checksum.toLong()
 
         val timings = ArrayList<Int>(400)
-        // Send standard 48-bit payload then its bitwise inverse, per Midea framing.
-        appendFrame(timings, raw)
-        appendFrame(timings, raw xor 0xFFFFFFFFFFFFL)
-        // A second pair is commonly sent as repeat; keep total under Android's <2s guidance.
-        appendFrame(timings, raw)
-        appendFrame(timings, raw xor 0xFFFFFFFFFFFFL)
+        appendFrame(timings, state)
+        appendFrame(timings, state xor 0xFFFFFFFFFFFFL)
         return timings.toIntArray()
     }
 
     private fun appendFrame(out: MutableList<Int>, value: Long) {
-        out += 4480; out += 4480
+        out += HEADER_MARK_US
+        out += HEADER_SPACE_US
         for (bit in 47 downTo 0) {
-            out += 560
-            out += if (((value ushr bit) and 1L) != 0L) 1680 else 560
+            out += BIT_MARK_US
+            out += if (((value ushr bit) and 1L) != 0L) ONE_SPACE_US else ZERO_SPACE_US
         }
-        out += 560
-        out += 5600
+        out += BIT_MARK_US
+        out += FRAME_GAP_US
     }
 
+    // Same checksum as IRremoteESP8266::IRMideaAC::calcChecksum:
+    // reverse bits in bytes 1..5, sum modulo 256, subtract from 256,
+    // then reverse bits in the result.
     private fun calcChecksum(state: Long): Int {
         var sum = 0
-        // Match IRremoteESP8266: sum bit-reversed bytes 1..5, complement, reverse bits.
         for (shift in intArrayOf(8, 16, 24, 32, 40)) {
             sum = (sum + reverseBits(((state ushr shift) and 0xFF).toInt())) and 0xFF
         }
