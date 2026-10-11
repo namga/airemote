@@ -116,3 +116,21 @@ Added `android.permission.TRANSMIT_IR` to `android/app/src/main/AndroidManifest.
 ## v1.3.7 build fix
 
 Moved `BrandIrReference` out of the `inner class AndroidRemoteBridge` into the enclosing `MainActivity` scope. Kotlin does not allow this nested class declaration inside an inner class, which caused `Class is prohibited here`. Version bumped to 1.3.7 (versionCode 14).
+
+
+## IR Learning Assistant v1.3.8 (phone-only limitation)
+
+- Xiaomi 17's built-in IR emitter is a transmitter. Android's public `ConsumerIrManager` exposes `hasIrEmitter()`, `getCarrierFrequencies()`, and `transmit()`; it does not expose a general receive/capture API for learning from an original remote. The app therefore never pretends that a signal was captured.
+- The new **Học lệnh IR** panel explains this limitation, accepts a manually imported/pasted raw mark/space pattern, offers heuristic timing classification (NEC/Sony SIRC only as a guess), saves imported commands in local storage, and can request native replay when the timing pattern is under 1.9 seconds and the chosen frequency is within Android-reported ranges.
+- The pattern is not automatically captured from the phone. The decoder is heuristic, not a full AC protocol decoder. Many AC commands contain complete state frames and exceed Android ConsumerIrManager's 2-second transmission limit; long samples are rejected.
+- No APK build or physical Xiaomi 17 / air-conditioner test has been performed in this packaging step. Android API transmission completion does not prove that the appliance received or accepted a command.
+
+
+## v1.3.9 — Bluetooth IR learning assistant
+
+- Adds BLE/GATT scanning, device selection, connection, GATT service/characteristic inspection, and READ/NOTIFY/INDICATE capture workflow.
+- Captured payload bytes are stored as HEX/text for diagnostics. The app only imports timings when the peripheral explicitly sends a JSON payload containing `pattern` or `raw` as positive microsecond durations; arbitrary vendor bytes are never guessed into pulse timings.
+- Adds Android 12+ `BLUETOOTH_SCAN` and `BLUETOOTH_CONNECT` runtime permissions, plus legacy scan/location declarations for Android 11 and earlier.
+- Compatibility boundary: this is a generic BLE/GATT client, not a universal adapter for every Bluetooth IR learner. The specific device must expose its signal through a readable/notifiable GATT characteristic. Proprietary serial-over-Bluetooth, Bluetooth Classic SPP, unknown binary formats, encrypted payloads, and device-specific command handshakes may need a model-specific driver.
+- Android phone IR blaster is transmit-only through the public `ConsumerIrManager` API; this app does not claim that the Xiaomi 17 itself can receive IR.
+- Validation performed for this source package: manifest/permissions, version/workflow consistency, JS syntax and ZIP integrity. A full Gradle build and physical BLE hardware test have not been performed in this environment.

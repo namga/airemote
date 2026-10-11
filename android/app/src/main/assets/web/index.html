@@ -26,6 +26,28 @@
 </section>
 <section class="room"><div class="eyebrow">ĐIỀU KHIỂN PHÒNG</div><label class="brand-select" for="brand">Hãng máy lạnh<select id="brand"><option>Daikin</option><option>Panasonic</option><option>LG</option><option>Samsung</option><option>Mitsubishi Electric</option><option>Toshiba</option><option>Sharp</option><option>Gree</option><option>Midea</option><option>Casper</option><option>AUX</option><option>Khác</option></select></label><div class="status" id="status">Đang tắt</div><div class="temperature"><button id="minus" aria-label="Giảm nhiệt độ">−</button><div><strong id="temp">24</strong><span>°C</span></div><button id="plus" aria-label="Tăng nhiệt độ">+</button></div><div class="range">16°C <div class="track"><div id="trackfill"></div></div> 30°C</div><button id="power" class="power" type="button" aria-label="Bật máy lạnh" aria-pressed="false"><svg class="power-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M12 2.75v8.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7.05 5.8a8 8 0 1 0 9.9 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="powerText">Bật máy lạnh</span></button></section>
 <section class="controls"><h2>Chọn chế độ</h2><div class="mode-grid"><button data-mode="COOL" class="mode selected"><b>❄</b><span>Làm lạnh</span></button><button data-mode="DRY" class="mode"><b>◌</b><span>Hút ẩm</span></button><button data-mode="FAN" class="mode"><b>〰</b><span>Quạt</span></button><button data-mode="HEAT" class="mode"><b>☀</b><span>Sưởi</span></button></div><h2>Tốc độ quạt</h2><div class="fans"><button data-fan="AUTO" class="selected">Tự động</button><button data-fan="LOW">Thấp</button><button data-fan="MED">Vừa</button><button data-fan="HIGH">Cao</button></div></section>
+
+<section class="learn card" aria-labelledby="learn-title">
+  <div class="learn-heading"><div><h2 id="learn-title">Học lệnh IR</h2><p>Nhập dữ liệu tín hiệu có sẵn, phân tích giao thức và lưu để phát lại.</p></div><span class="learn-badge">BETA</span></div>
+  <div class="learn-warning"><strong>Bluetooth learner:</strong> Chỉ hỗ trợ bộ học IR có Bluetooth Low Energy (BLE/GATT) và xuất dữ liệu qua characteristic. Giao thức riêng của thiết bị có thể cần tài liệu nhà sản xuất. Xiaomi 17 không tự thu IR bằng blaster tích hợp.</div>
+  <div class="learn-actions"><button type="button" id="scanBle" class="secondary-action">Quét bộ học IR BLE</button><button type="button" id="disconnectBle" class="secondary-action">Ngắt kết nối</button></div>
+  <div id="bleStatus" class="learn-result" role="status" aria-live="polite">Chưa kết nối bộ học IR Bluetooth.</div>
+  <div id="bleDevices" class="learned-list"><p class="learn-help">Nhấn Quét BLE để tìm thiết bị.</p></div>
+  <label class="learn-field">UUID characteristic nhận dữ liệu<input id="bleCharacteristicUuid" type="text" placeholder="Chọn UUID từ dịch vụ GATT bên dưới"></label>
+  <button type="button" id="subscribeBle" class="secondary-action">Đọc / nhận dữ liệu từ UUID</button>
+  <div id="bleServices" class="learned-list"><p class="learn-help">Dịch vụ GATT sẽ hiện sau khi kết nối.</p></div>
+  <div class="learn-actions"><button type="button" id="importBleCapture" class="secondary-action">Nhập dạng sóng từ payload BLE</button><button type="button" id="refreshBleCapture" class="secondary-action">Làm mới dữ liệu nhận</button></div>
+  <div id="bleCapturePreview" class="learn-result" role="status" aria-live="polite">Chưa nhận dữ liệu từ BLE.</div>
+  <button type="button" id="captureIr" class="secondary-action">Bắt tín hiệu bằng IR blaster điện thoại</button>
+  <label class="learn-field">Tên lệnh<input id="learnName" type="text" maxlength="60" placeholder="Ví dụ: Bật máy lạnh" value="Lệnh mới"></label>
+  <div class="learn-row"><label class="learn-field">Tần số (Hz)<input id="learnFrequency" type="number" min="20000" max="60000" step="1000" value="38000"></label><label class="learn-field">Giao thức<input id="learnProtocol" type="text" readonly value="Chưa phân tích"></label></div>
+  <label class="learn-field">Dạng sóng thô (micro giây, mark/space luân phiên)<textarea id="learnRaw" rows="4" placeholder="Ví dụ: 9000,4500,560,560,560,1690,..."></textarea></label>
+  <p class="learn-help">Có thể dán chuỗi thời gian từ nguồn tin cậy hoặc nhập payload BLE nếu firmware gửi JSON có trường pattern/raw. Payload HEX chưa rõ định dạng được lưu để chẩn đoán nhưng không tự chuyển thành xung giả.</p>
+  <div class="learn-actions"><button type="button" id="analyzeIr" class="secondary-action">Phân tích giao thức</button><button type="button" id="saveLearnedIr" class="primary-action">Lưu lệnh</button></div>
+  <div id="learnResult" class="learn-result" role="status" aria-live="polite">Chưa có dữ liệu được phân tích.</div>
+  <div class="saved-heading"><strong>Lệnh đã lưu</strong><button type="button" id="clearLearnedIr" class="text-action">Xóa tất cả</button></div>
+  <div id="learnedList" class="learned-list"><p class="learn-help">Chưa có lệnh nào được lưu.</p></div>
+</section>
 <section class="foot"><span class="dot"></span><span id="hint">Web không phát IR trực tiếp · Android có thể kiểm tra bộ phát IR</span><button type="button" id="checkIr" class="ir-check">Kiểm tra IR</button><button id="install" hidden>Cài ứng dụng</button></section>
 <footer>AC Remote <span>•</span> Đơn giản, tiện nghi mỗi ngày</footer>
 </main><script src="app.js"></script></body></html>
