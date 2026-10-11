@@ -145,7 +145,7 @@ class MainActivity : Activity() {
         note.addView(label("Lưu ý về hồng ngoại", 15f, ink, true))
         note.addView(label("Chọn đúng hãng và model trước khi gửi lệnh. Sharp có nhiều giao thức; ứng dụng sẽ không gửi mã Daikin thay thế. Kết quả kiểm tra phần cứng không xác nhận máy lạnh đã nhận lệnh.", 13f, muted), params(top = 8))
         scrollContent.addView(note)
-        scrollContent.addView(label("Universal AC Remote · Cài đặt được lưu tự động", 12f, muted), params(top = 18))
+        scrollContent.addView(label("Universal AC Remote · UI SYNC 2026.10 · v1.1.0", 12f, muted), params(top = 18))
         setContentView(ScrollView(this).apply {
             isFillViewport = true
             clipToPadding = false

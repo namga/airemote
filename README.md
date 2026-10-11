@@ -63,3 +63,6 @@ Sharp IR is intentionally not enabled without an exact model/protocol match. A s
 The web/PWA uses the reference design in `web/style.css`; Android native UI was aligned to the same rounded white cards, pale background, amber accent, large temperature controls, mode/fan selectors, and IR diagnostic messaging. Android preferences persist locally. The Android app and web page still use separate rendering code, so future visual changes should be applied to both implementations.
 
 The Sharp encoder is intentionally not enabled without an exact model/protocol match. Build success does not prove IR compatibility on a real air conditioner.
+
+## Verify the installed Android build
+This package uses Android versionName `1.1.0` / versionCode `2` and shows `UI SYNC 2026.10 · v1.1.0` at the bottom of the native app screen. After a successful GitHub Actions run, install the APK artifact from that exact run. Confirm the fingerprint is visible and Android App info reports version 1.1.0. If either does not match, the installed APK is not from this source revision.
