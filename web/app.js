@@ -42,6 +42,13 @@ installButton.onclick=async()=>{
 };
 window.addEventListener("appinstalled",()=>{installButton.hidden=true;$("#hint").textContent="Đã cài ứng dụng vào thiết bị.";});
 if("serviceWorker"in navigator && location.protocol!=="file:")navigator.serviceWorker.register("./sw.js").catch(()=>{});
+const irCheckButton=$("#checkIr");
+if(irCheckButton){irCheckButton.onclick=()=>{
+  if(window.AndroidACRemote && typeof window.AndroidACRemote.checkIr === "function"){
+    try{$("#hint").textContent=window.AndroidACRemote.checkIr() || "Không có kết quả kiểm tra IR.";}
+    catch(e){$("#hint").textContent="Lỗi khi kiểm tra IR trên Android.";}
+  }else{$("#hint").textContent="Kiểm tra bộ phát IR chỉ khả dụng trong ứng dụng Android; trình duyệt web không truy cập được phần cứng IR.";}
+};}
 render();
 
 // Appearance settings are saved alongside the remote preferences.

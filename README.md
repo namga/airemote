@@ -70,3 +70,12 @@ Bản source này dùng Android versionName `1.2.3` / versionCode `3`. Sau khi G
 
 ## App icon v1.2.3
 Updated Android launcher icons (legacy and adaptive) and web/PWA icons to the new blue air-conditioner remote artwork. Android package version: 1.2.3 (versionCode 6).
+
+
+## IR diagnostics and protocol status (v1.3.0)
+
+- The Android app now exposes **Kiểm tra IR** to query `ConsumerIrManager`, whether Android reports an IR emitter, and supported carrier-frequency ranges. This checks reported hardware capability only; it does not prove an emitted pulse was optically measured or that an AC received it.
+- A browser/PWA cannot access the phone's Android Consumer IR API; the diagnostic button explains this limitation.
+- AC remotes do not share one universal command encoding. This build does not send random/common test pulses as if they were AC commands. For brands without a verified encoder, the app reports that it did not send an AC command. The existing Daikin encoder remains experimental and must be tested against the actual unit.
+- `ConsumerIrManager.transmit()` returning means Android's API completed the transmit request, not that the target appliance received or accepted the command.
+- Physical operation cannot be guaranteed from source inspection alone; test on the target phone and air conditioner.

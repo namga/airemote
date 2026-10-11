@@ -66,24 +66,22 @@ class MainActivity : Activity() {
 
         @JavascriptInterface
         fun checkIr(): String {
-            val manager = ir ?: return "Android không cung cấp ConsumerIrManager trên thiết bị này."
-            if (!manager.hasIrEmitter()) return "Không phát hiện bộ phát IR qua Android API."
+            val manager = ir ?: return "Không truy cập được dịch vụ Consumer IR của Android; chưa gửi tín hiệu."
+            if (!manager.hasIrEmitter()) return "KẾT QUẢ: Android không phát hiện bộ phát IR. Chưa gửi tín hiệu."
             val ranges = try { manager.carrierFrequencies?.joinToString { "${it.minFrequency}-${it.maxFrequency} Hz" } ?: "không rõ dải tần" }
                 catch (_: Exception) { "không đọc được dải tần" }
-            return "Đã phát hiện IR emitter ($ranges). Chưa xác nhận máy lạnh nhận lệnh."
+            return "KIỂM TRA PHẦN CỨNG: Có bộ phát IR ($ranges). Đây chưa phải phép thử phát tín hiệu và chưa xác nhận máy lạnh nhận lệnh."
         }
     }
 
     private fun transmit(brand: String, power: Boolean, temperature: Int, mode: String, fan: String): String {
         val manager = ir ?: return "Không phát hiện bộ phát IR qua Android API."
-        if (!manager.hasIrEmitter()) return "Không phát hiện bộ phát IR qua Android API."
-        if (brand != "Daikin") return if (brand == "Sharp")
-            "Chưa gửi lệnh: Sharp cần xác minh model dàn lạnh/remote trước khi chọn giao thức IR."
-        else "Chưa có encoder IR đã xác minh cho $brand. Chưa gửi lệnh để tránh mã sai."
+        if (!manager.hasIrEmitter()) return "KẾT QUẢ: Android không phát hiện bộ phát IR. Chưa gửi lệnh."
+        if (brand != "Daikin") return "Chưa có bộ mã điều khiển đã xác minh cho $brand. Không phát mã thử ngẫu nhiên; chưa gửi lệnh máy lạnh."
         return try {
             val state = DaikinIr.buildState(power, temperature, mode, fan)
             manager.transmit(DaikinIr.frequency(), DaikinIr.waveform(state))
-            "Đã yêu cầu phát IR Daikin. Hãy kiểm tra máy lạnh; Android không xác nhận máy đã nhận lệnh."
+            "ANDROID API ĐÃ THỰC HIỆN LỆNH PHÁT theo encoder Daikin hiện có. Chưa xác nhận máy lạnh nhận lệnh; nếu không phản hồi, encoder/model có thể không tương thích."
         } catch (e: Exception) {
             "Không phát được IR: ${e.message ?: "lỗi không xác định"}"
         }
