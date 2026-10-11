@@ -72,10 +72,27 @@ Bản source này dùng Android versionName `1.2.3` / versionCode `3`. Sau khi G
 Updated Android launcher icons (legacy and adaptive) and web/PWA icons to the new blue air-conditioner remote artwork. Android package version: 1.2.3 (versionCode 6).
 
 
-## IR diagnostics and protocol status (v1.3.1)
+## IR diagnostics, power icon fix, and protocol status (v1.3.3)
 
 - The Android app now exposes **Kiểm tra IR** to query `ConsumerIrManager`, whether Android reports an IR emitter, and supported carrier-frequency ranges. This checks reported hardware capability only; it does not prove an emitted pulse was optically measured or that an AC received it.
 - A browser/PWA cannot access the phone's Android Consumer IR API; the diagnostic button explains this limitation.
 - AC remotes do not share one universal command encoding. This build does not send random/common test pulses as if they were AC commands. For brands without a verified encoder, the app reports that it did not send an AC command. The existing Daikin encoder remains experimental and must be tested against the actual unit.
 - `ConsumerIrManager.transmit()` returning means Android's API completed the transmit request, not that the target appliance received or accepted the command.
 - Physical operation cannot be guaranteed from source inspection alone; test on the target phone and air conditioner.
+
+
+## v1.3.3 UI fix
+- Replaced the power-button Unicode glyph (which rendered as a missing-glyph box on some Android/WebView fonts) with an inline SVG power symbol.
+- The button updates its accessible label and `aria-pressed` state whenever power state toggles.
+- Synced the web/PWA files and Android bundled web assets.
+- Android version: `1.3.3` (`versionCode 10`); Java/Kotlin JVM target remains 17.
+- The icon/UI change does not prove that a selected brand has a supported IR protocol or that the AC received a command.
+
+
+## v1.3.4 — IR carrier frequency references
+
+- Added clearly labelled common protocol carrier-frequency references: 36 kHz (Philips RC-5/RC-6), 38 kHz (NEC/Samsung and many consumer remotes), and 40 kHz (Sony SIRC and some others). These are reference values from public IR protocol documentation, **not** a measured frequency list for the phone and not universal AC codes.
+- If Android's `getCarrierFrequencies()` returns `null` or an empty list, the app now shows the common references separately and explicitly says that device support is still unknown. If Android reports ranges, the app shows which reference frequencies fall inside those ranges.
+- The diagnostic does not transmit arbitrary codes or claim an AC received a command. AC control still requires a matching, verified protocol encoder.
+- Sources: Android `ConsumerIrManager` API https://developer.android.com/reference/android/hardware/ConsumerIrManager ; IRremoteESP8266 FAQ (common 38 kHz reference and protocol/model caveats) https://github.com/crankyoldgit/IRremoteESP8266/wiki/Frequently-Asked-Questions ; IRremoteESP8266 protocol documentation https://github.com/crankyoldgit/IRremoteESP8266/blob/master/docs/doxygen_index.md .
+- Android version: `1.3.4` (`versionCode 11`); Java and Kotlin targets remain JVM 17.

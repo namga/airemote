@@ -18,7 +18,7 @@ function applyAppearance(){
 function render(){
   $("#brand").value=state.brand||"Daikin";$("#temp").textContent=state.temp;
   $("#status").textContent=state.power?`Đang bật · ${{COOL:"Làm lạnh",DRY:"Hút ẩm",FAN:"Quạt",HEAT:"Sưởi"}[state.mode]}`:"Máy lạnh đang tắt";
-  $("#powerText").textContent=state.power?"Tắt máy lạnh":"Bật máy lạnh";$("#power").classList.toggle("off",!state.power);
+  $("#powerText").textContent=state.power?"Tắt máy lạnh":"Bật máy lạnh";$("#power").classList.toggle("off",!state.power);$("#power").setAttribute("aria-pressed",String(state.power));$("#power").setAttribute("aria-label",state.power?"Tắt máy lạnh":"Bật máy lạnh");
   $("#trackfill").style.width=((state.temp-16)/14*100)+"%";
   document.querySelectorAll("[data-mode]").forEach(b=>{const selected=b.dataset.mode===state.mode;b.classList.toggle("selected",selected);b.setAttribute("aria-pressed",String(selected))});
   document.querySelectorAll("[data-fan]").forEach(b=>{const selected=b.dataset.fan===state.fan;b.classList.toggle("selected",selected);b.setAttribute("aria-pressed",String(selected))});
