@@ -59,10 +59,10 @@ The Android UI has rounded cards, improved spacing, larger temperature controls,
 
 Sharp IR is intentionally not enabled without an exact model/protocol match. A successful build does not prove IR compatibility on a real air conditioner.
 
-## Shared UI v1.2.0 — dùng chung giao diện web
+## Shared UI v1.2.2 — dùng chung giao diện web
 Android hiện mở chính bộ HTML/CSS/JavaScript được đóng gói từ `web/` vào WebView, thay vì dựng lại giao diện bằng các widget Android riêng. Vì vậy header, thẻ bo tròn, bảng màu, cỡ chữ, nút nhiệt độ, chế độ, tốc độ quạt và cài đặt giao diện đều dùng cùng một nguồn thiết kế với web/PWA. Khi thay đổi giao diện, cập nhật `web/` rồi đồng bộ lại `android/app/src/main/assets/web/`.
 
 Nút nguồn trong Android gọi cầu nối native để thử phát IR. Chỉ encoder Daikin hiện có mới được gọi; các hãng khác, đặc biệt Sharp, vẫn bị chặn an toàn khi chưa xác minh đúng model. Trạng thái giao diện và lựa chọn được lưu trong localStorage của WebView; trạng thái lệnh cũng được lưu vào SharedPreferences. Web/PWA chạy ngoài trình duyệt vẫn chỉ là giao diện và không tự phát IR.
 
 ## Verify the installed Android build
-Bản source này dùng Android versionName `1.2.0` / versionCode `3`. Sau khi GitHub Actions build thành công, cài APK artifact của đúng run/commit đó và kiểm tra Settings → Apps → Universal AC Remote → App info hiển thị version 1.2.0. Chưa thể khẳng định APK đã build hoặc kiểm thử trên thiết bị thật chỉ dựa vào source ZIP.
+Bản source này dùng Android versionName `1.2.2` / versionCode `3`. Sau khi GitHub Actions build thành công, cài APK artifact của đúng run/commit đó và kiểm tra Settings → Apps → Universal AC Remote → App info hiển thị version 1.2.2. Chưa thể khẳng định APK đã build hoặc kiểm thử trên thiết bị thật chỉ dựa vào source ZIP.
