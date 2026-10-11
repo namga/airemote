@@ -26,9 +26,9 @@ function render(){
 }
 $("#minus").onclick=()=>{state.temp=Math.max(16,state.temp-1);save()};$("#plus").onclick=()=>{state.temp=Math.min(30,state.temp+1);save()};$("#brand").onchange=e=>{state.brand=e.target.value;save();if(window.AndroidACRemote&&typeof window.AndroidACRemote.setBrand==="function"){try{window.AndroidACRemote.setBrand(state.brand)}catch{}}$("#hint").textContent="Đã chọn "+state.brand+(window.AndroidACRemote?" · nhấn Kiểm tra IR để xem tần số tham khảo":" · web không phát IR trực tiếp")};$("#power").onclick=()=>{state.power=!state.power;save();
   if(window.AndroidACRemote && typeof window.AndroidACRemote.sendState === "function"){
-    try { const result=window.AndroidACRemote.sendState(JSON.stringify(state)); $("#hint").textContent=result || "Đã gửi yêu cầu tới bộ phát IR"; }
+    try { const result=window.AndroidACRemote.sendState(JSON.stringify(state)); $("#hint").textContent=result || "Đã xử lý yêu cầu · xem kết quả kiểm tra IR"; }
     catch(e){ $("#hint").textContent="Không thể gửi lệnh IR trên thiết bị này."; }
-  } else { $("#hint").textContent="Đã cập nhật giao diện · web không gửi lệnh IR"; }
+  } else { $("#hint").textContent="Đã cập nhật giao diện · web không phát IR trực tiếp"; }
 };
 document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;save()});document.querySelectorAll("[data-fan]").forEach(b=>b.onclick=()=>{state.fan=b.dataset.fan;save()});
 let deferred;

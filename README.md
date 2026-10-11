@@ -1,3 +1,13 @@
+# Universal AC Remote v1.4.0 — IR transmission diagnosis
+
+## Important fix for the “button does nothing” report
+
+- The previous Daikin waveform generator contained a placeholder state layout and assumed checksums, not a verified encoder for a specific Daikin indoor-unit/remote model. A successful Android `transmit()` call only means the API request completed; it does not prove that an AC accepted the command.
+- v1.4.0 disables that unverified send path for **all brands** and reports why it did not send a command, instead of showing a misleading transmit-success result. This is an honesty/safety fix, not a claim that universal AC control is now working.
+- To enable actual control, add a model-specific encoder backed by a reliable protocol reference/test vectors, or import a compatible raw waveform from an external IR learning device. The built-in Xiaomi 17 IR emitter is transmit-only through Android's public API and cannot learn directly from the CHUNGHOP K-1038E remote.
+- The BLE learner UI is generic BLE/GATT only; it is not guaranteed to support every commercial learner or vendor-specific protocol.
+- Android version: `1.4.0` (`versionCode 17`). This ZIP is source only. No APK build or physical IR/AC test was performed in this environment.
+
 # Universal AC Remote — ứng dụng web có thể cài trên điện thoại
 
 Bản này là PWA (Progressive Web App): sau khi triển khai lên HTTPS, người dùng có thể cài vào màn hình chính Android và mở như một ứng dụng độc lập. Giao diện được lưu cache để có thể mở khi ngoại tuyến sau lần tải đầu tiên.

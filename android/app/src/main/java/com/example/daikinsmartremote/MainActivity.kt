@@ -377,14 +377,17 @@ class MainActivity : Activity() {
     private fun transmit(brand: String, power: Boolean, temperature: Int, mode: String, fan: String): String {
         val manager = ir ?: return "Không phát hiện bộ phát IR qua Android API."
         if (!manager.hasIrEmitter()) return "KẾT QUẢ: Android không phát hiện bộ phát IR. Chưa gửi lệnh."
-        if (brand != "Daikin") return "Chưa có bộ mã điều khiển đã xác minh cho $brand. Không phát mã thử ngẫu nhiên; chưa gửi lệnh máy lạnh."
-        return try {
-            val state = DaikinIr.buildState(power, temperature, mode, fan)
-            manager.transmit(DaikinIr.frequency(), DaikinIr.waveform(state))
-            "ANDROID API ĐÃ THỰC HIỆN LỆNH PHÁT theo encoder Daikin hiện có. Chưa xác nhận máy lạnh nhận lệnh; nếu không phản hồi, encoder/model có thể không tương thích."
-        } catch (e: Exception) {
-            "Không phát được IR: ${e.message ?: "lỗi không xác định"}"
+        // The previous DaikinIr implementation used a placeholder state/checksum and was
+        // not a verified model encoder. Sending it created a misleading success path.
+        // Never transmit an invented AC state. Use transmitLearned() only with a valid,
+        // known-compatible raw capture, or add a model-specific encoder with test vectors.
+        val ranges = try { manager.carrierFrequencies } catch (e: Exception) { null }
+        val hardware = if (ranges.isNullOrEmpty()) {
+            "Android phát hiện IR nhưng không cung cấp dải tần để xác minh."
+        } else {
+            "Dải tần Android báo: " + ranges.joinToString { "${it.minFrequency}–${it.maxFrequency} Hz" } + "."
         }
+        return "CHƯA GỬI LỆNH MÁY LẠNH: app chưa có encoder đã xác minh cho $brand; encoder Daikin cũ dùng trạng thái/checksum giả định và có thể phát sai mã. $hardware Cần mã giao thức đúng model hoặc dạng sóng IR đã thu bằng thiết bị học mã tương thích. Trạng thái trên giao diện chỉ là lựa chọn, không xác nhận máy lạnh đã đổi trạng thái."
     }
 
     @Deprecated("Deprecated in Android API")
