@@ -96,3 +96,8 @@ Updated Android launcher icons (legacy and adaptive) and web/PWA icons to the ne
 - The diagnostic does not transmit arbitrary codes or claim an AC received a command. AC control still requires a matching, verified protocol encoder.
 - Sources: Android `ConsumerIrManager` API https://developer.android.com/reference/android/hardware/ConsumerIrManager ; IRremoteESP8266 FAQ (common 38 kHz reference and protocol/model caveats) https://github.com/crankyoldgit/IRremoteESP8266/wiki/Frequently-Asked-Questions ; IRremoteESP8266 protocol documentation https://github.com/crankyoldgit/IRremoteESP8266/blob/master/docs/doxygen_index.md .
 - Android version: `1.3.4` (`versionCode 11`); Java and Kotlin targets remain JVM 17.
+
+
+## v1.3.5 permission fix
+
+Added `android.permission.TRANSMIT_IR` to `android/app/src/main/AndroidManifest.xml`. The screenshot error `Access denied, requires android.permission.TRANSMIT_IR` indicates the installed APK did not declare this permission. It is a normal permission, so no runtime permission dialog is expected; build and install this new APK. This fixes the permission denial, but does not prove that a compatible air-conditioner protocol is available or that the appliance receives the signal.
