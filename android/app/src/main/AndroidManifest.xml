@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-feature android:name="android.hardware.consumerir" android:required="false" />
-    <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="Universal AC Remote" android:usesCleartextTraffic="true">
+    <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="Universal AC Remote" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:usesCleartextTraffic="true">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
