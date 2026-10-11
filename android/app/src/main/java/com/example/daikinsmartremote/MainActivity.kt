@@ -109,6 +109,7 @@ class MainActivity : Activity() {
             "Mitsubishi Electric" to BrandIrReference("38 kHz (tham khảo phổ biến)", "MITSUBISHI_AC / MITSUBISHI", "Có nhiều họ giao thức; không suy ra model chỉ từ hãng."),
             "Casper" to BrandIrReference("Chưa xác minh riêng cho Casper; 38 kHz chỉ là mốc tham khảo chung", "Chưa xác minh giao thức Casper riêng", "Có thể dùng nền tảng/OEM khác nhau tùy model."),
             "Midea" to BrandIrReference("38 kHz (tham khảo phổ biến)", "MIDEA / MIDEA24 / một số thiết bị tương thích COOLIX", "Không phải mọi model Midea đều dùng cùng biến thể."),
+            "Reetech" to BrandIrReference("Chưa xác minh cho RT9-BM5; 38 kHz chỉ là mốc tham khảo chung", "Chưa xác minh giao thức Reetech RT9-BM5 / RC9-BM5", "Không suy ra giao thức từ mã cài đặt remote đa năng 181/697. Bản này không phát lệnh giả bằng encoder Midea/Daikin."),
             "Daikin" to BrandIrReference("38 kHz (tham khảo phổ biến)", "DAIKIN và nhiều biến thể DAIKINxx", "Daikin có nhiều định dạng lệnh và độ dài gói khác nhau."),
             "LG" to BrandIrReference("38 kHz (tham khảo phổ biến)", "LG / LG2", "Biến thể giao thức phụ thuộc dòng remote/model.")
         )
@@ -157,7 +158,7 @@ class MainActivity : Activity() {
                     false -> "Android không báo dải 38 kHz; burst vẫn được gửi để kiểm tra API."
                     null -> "Android không trả được dải tần; burst vẫn được gửi để kiểm tra API."
                 }
-                "TEST IR: API transmit() đã hoàn tất burst 38 kHz ngắn. $carrierNote Đây KHÔNG phải lệnh điều hòa. Hãy dùng camera điện thoại khác (ưu tiên camera trước) nhìn vào cửa sổ IR khi bấm test; nếu thấy chớp sáng chỉ xác nhận có phát quang IR, không xác nhận mã Midea đúng."
+                "TEST IR: API transmit() đã hoàn tất burst 38 kHz ngắn. $carrierNote Đây KHÔNG phải lệnh điều hòa. Hãy dùng camera điện thoại khác (ưu tiên camera trước) nhìn vào cửa sổ IR khi bấm test; nếu thấy chớp sáng chỉ xác nhận có phát quang IR, không xác nhận giao thức Reetech hay mã điều hòa đúng."
             } catch (e: Exception) {
                 "TEST IR thất bại: ${e.message ?: e.javaClass.simpleName}"
             }
@@ -413,7 +414,8 @@ class MainActivity : Activity() {
         // stock remote working is strong practical evidence that the handset has an IR path;
         // let ConsumerIrManager.transmit decide rather than rejecting the command pre-emptively.
         if (!brand.equals("Midea", ignoreCase = true) && !brand.equals("Media", ignoreCase = true)) {
-            return "${brand}: encoder riêng chưa được tích hợp ở bản này. Chưa phát lệnh; không dùng chung giao thức Daikin."
+            val modelNote = if (brand.equals("Reetech", ignoreCase = true)) " Model đã nhập: RT9-BM5 (dàn lạnh) / RC9-BM5 (dàn nóng). Giao thức của model này chưa được xác minh." else ""
+            return "${brand}: encoder riêng chưa được tích hợp ở bản này.$modelNote Chưa phát lệnh; không tự dùng giao thức Midea/Daikin và không báo thành công giả."
         }
         return try {
             val pattern = MideaIr.buildPattern(power, temperature, mode, fan)
