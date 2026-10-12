@@ -418,13 +418,17 @@ class MainActivity : Activity() {
             return "${brand}: encoder riêng chưa được tích hợp ở bản này. Chưa phát lệnh; không dùng giao thức của hãng khác."
         }
         return try {
-            val pattern = MideaIr.buildPattern(power, temperature, mode, fan)
+            val pattern = if (reetechMideaTrial) {
+                MideaIr.buildReetechPattern(power, temperature, mode, fan)
+            } else {
+                MideaIr.buildPattern(power, temperature, mode, fan)
+            }
             if (pattern.size > 1000 || pattern.sumOf { it.toLong() } >= 1_900_000L) {
                 return "Mẫu Midea vượt giới hạn phát an toàn của Android. Chưa phát."
             }
             manager.transmit(38000, pattern)
             if (reetechMideaTrial) {
-                "Đã gửi lệnh thử cho Reetech RT9-BM5 / RC9-BM5 bằng encoder Midea 38 kHz dựa trên thông tin Mi Remote của bạn (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). API phát đã chạy; chỉ thử thực tế mới xác nhận máy lạnh nhận lệnh."
+                "Đã gửi lệnh thử cho Reetech RT9-BM5 / RC9-BM5 bằng biến thể Midea 38 kHz thử nghiệm (bit OEM bổ sung) dựa trên thông tin Mi Remote của bạn (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). API phát đã chạy; chỉ thử thực tế mới xác nhận máy lạnh nhận lệnh."
             } else {
                 "Android đã hoàn tất lệnh phát IR Midea 38 kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). Điều này chỉ xác nhận API phát đã chạy, không xác nhận máy lạnh nhận lệnh. Nếu máy vẫn im lặng, có thể biến thể Midea khác với giao thức chuẩn đang được thử."
             }

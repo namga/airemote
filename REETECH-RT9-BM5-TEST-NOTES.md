@@ -1,7 +1,8 @@
-# Reetech RT9-BM5 / RC9-BM5 test notes (v1.5.6)
+# Reetech RT9-BM5 / RC9-BM5 test notes (v1.5.7)
 
-- User-reported observation: Xiaomi 17's Mi Remote controls this Reetech unit for power, temperature, and other controls when the Mi Remote brand preset is set to Midea.
-- This version therefore routes Reetech selections through the app's existing Midea 38 kHz encoder as a compatibility trial.
-- This is an evidence-based hypothesis, not a verified capture of the Xiaomi Mi Remote waveform. Midea protocol variants exist, so the app's command may still fail.
-- The status message says that Android completed an IR transmit call; it does not claim the AC received the command.
-- No APK is included. This archive does not contain Gradle wrapper scripts and the current environment has no Gradle installation. Build using Android Studio or add a Gradle wrapper / GitHub Actions workflow before running CI.
+- User-reported observation: Xiaomi 17's Mi Remote controls this Reetech unit for power, temperature, and other controls when the preset is set to Midea.
+- v1.5.6 used the standard Midea state encoder and did not operate the user's AC.
+- v1.5.7 adds a separate Reetech trial profile that sets the otherwise-unknown OEM bit in the Midea byte-4 state, based on the public IRremoteESP8266 documentation that some OEM units require this bit.
+- This is a targeted protocol hypothesis, not a verified capture of Mi Remote's waveform or proof of Reetech RT9-BM5 compatibility. Do not describe it as confirmed working until tested on the AC.
+- The Android status message distinguishes a completed transmit API call from confirmed AC reception.
+- No APK is included. Use GitHub Actions to build the debug APK; workflow metadata checks are updated to versionName 1.5.7 / versionCode 25.

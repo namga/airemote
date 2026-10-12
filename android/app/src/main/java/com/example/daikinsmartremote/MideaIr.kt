@@ -22,7 +22,7 @@ internal object MideaIr {
 
     /** Checks that the Celsius temperature byte has Fahrenheit/reserved bits cleared. */
     fun stateLayoutSelfTest(): Boolean {
-        val state = buildState(true, 27, "COOL", "AUTO")
+        val state = buildState(true, 27, "COOL", "AUTO", reetechUnknownBit = false)
         val tempByte = ((state ushr 24) and 0xFF).toInt()
         val headerByte = ((state ushr 40) and 0xFF).toInt()
         return tempByte == 10 && headerByte == 0xA1 && (state and 0xFF).toInt() == calcChecksum(state)
@@ -35,14 +35,28 @@ internal object MideaIr {
 
     /** Returns alternating mark/space durations accepted by ConsumerIrManager. */
     fun buildPattern(power: Boolean, temperature: Int, mode: String, fan: String): IntArray {
-        val state = buildState(power, temperature, mode, fan)
+        val state = buildState(power, temperature, mode, fan, reetechUnknownBit = false)
         val timings = ArrayList<Int>(400)
         appendFrame(timings, state)
         appendFrame(timings, state xor 0xFFFFFFFFFFFFL)
         return timings.toIntArray()
     }
 
-    private fun buildState(power: Boolean, temperature: Int, mode: String, fan: String): Long {
+    /**
+     * Reetech trial profile: same public Midea state layout, but sets the
+     * otherwise-unknown bit in byte 4. Upstream documents that some OEM units
+     * require this bit; this is a targeted compatibility experiment, not a
+     * verified Reetech protocol capture.
+     */
+    fun buildReetechPattern(power: Boolean, temperature: Int, mode: String, fan: String): IntArray {
+        val state = buildState(power, temperature, mode, fan, reetechUnknownBit = true)
+        val timings = ArrayList<Int>(400)
+        appendFrame(timings, state)
+        appendFrame(timings, state xor 0xFFFFFFFFFFFFL)
+        return timings.toIntArray()
+    }
+
+    private fun buildState(power: Boolean, temperature: Int, mode: String, fan: String, reetechUnknownBit: Boolean): Long {
         val tempOffset = temperature.coerceIn(17, 30) - 17
         val modeBits = when (mode.uppercase()) {
             "COOL" -> 0
@@ -66,7 +80,7 @@ internal object MideaIr {
         // Fahrenheit; bits 6..7 are reserved and must be zero. The prior
         // encoder incorrectly set bit 6 (0x40), making every Celsius command
         // malformed for the standard Midea protocol.
-        val modeFanPower = ((if (power) 0x80 else 0) or (fanBits shl 3) or modeBits).toLong()
+        val modeFanPower = ((if (power) 0x80 else 0) or (if (reetechUnknownBit) 0x20 else 0) or (fanBits shl 3) or modeBits).toLong()
         val tempByte = tempOffset.toLong() // Celsius: Fahrenheit and reserved bits cleared.
         var state = (MIDEA_HEADER_AND_COMMAND_TYPE shl 40) or
             (modeFanPower shl 32) or
