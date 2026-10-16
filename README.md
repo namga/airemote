@@ -1,12 +1,12 @@
-# Universal AC Remote v1.5.5 — Reetech RT9-BM5 profile (protocol unverified)
+# Universal AC Remote v1.5.9 — Kotlin build fix (protocol unverified)
 
 ## Important fix for the “button does nothing” report
 
 - The previous Daikin waveform generator contained a placeholder state layout and assumed checksums, not a verified encoder for a specific Daikin indoor-unit/remote model. A successful Android `transmit()` call only means the API request completed; it does not prove that an AC accepted the command.
-- v1.4.0 disables that unverified send path for **all brands** and reports why it did not send a command, instead of showing a misleading transmit-success result. This is an honesty/safety fix, not a claim that universal AC control is now working.
+- Earlier versions disabled that unverified send path for **all brands** and reports why it did not send a command, instead of showing a misleading transmit-success result. This is an honesty/safety fix, not a claim that universal AC control is now working.
 - To enable actual control, add a model-specific encoder backed by a reliable protocol reference/test vectors, or import a compatible raw waveform from an external IR learning device. The built-in Xiaomi 17 IR emitter is transmit-only through Android's public API and cannot learn directly from the CHUNGHOP K-1038E remote.
 - The BLE learner UI is generic BLE/GATT only; it is not guaranteed to support every commercial learner or vendor-specific protocol.
-- Android version: `1.5.5` (`versionCode 23`). Added a dedicated Reetech profile for indoor unit RT9-BM5 / outdoor unit RC9-BM5. Source ZIP only; no APK was built in this environment and no physical Xiaomi 17/Reetech test was performed.
+- Android version: `1.5.9` (`versionCode 27`). Added a dedicated Reetech profile for indoor unit RT9-BM5 / outdoor unit RC9-BM5. Source ZIP only; no APK was built in this environment and no physical Xiaomi 17/Reetech test was performed.
 - Corrected the native Kotlin Midea 48-bit state layout and transmission framing: bytes are ordered as the public IRremoteESP8266 implementation, checksum is validated against its documented reset vector `0xA1826FFFFF62`, and the frame is followed by the bitwise-inverted payload. The previous encoder incorrectly packed the state bytes, temperature and repeat sequence. The app transmits using the experimental Midea encoder only when Midea is selected; Reetech and other unsupported brands remain blocked rather than reusing Midea/Daikin. Reetech 38 kHz is displayed only as a generic reference, not a confirmed model frequency.
 - Compatibility is **experimental**. Midea variants/model-specific fields may differ; Android API completion is not proof the air conditioner received or accepted the command. If it does not respond, collect the indoor unit/remote model or compare against a captured known-good waveform.
 - Reference: IRremoteESP8266 `ir_Midea.cpp` / `ir_Midea.h` (Midea protocol support is explicitly described as alpha/needs testing).
@@ -172,3 +172,9 @@ Corrected the Celsius temperature byte: bits 0–4 carry the offset from 17°C, 
 - No verified raw waveform/state encoder was found in this project, so the app intentionally does not transmit a fabricated Reetech command. The universal-remote preset numbers 181/697 are not proof of the AC IR carrier frequency or protocol.
 - The generic IR pulse test checks only whether Android can request a short 38 kHz burst; it is not a valid AC command.
 - To enable actual control, a known-good capture from a compatible external IR learner or a validated protocol implementation for this model is still required.
+
+
+## v1.5.9 build fix
+- Fixed the missing `reetechUnknownBit` argument in `MideaIr.stateLayoutSelfTest()` that caused `:app:compileDebugKotlin` to fail.
+- Bumped Android version to 1.5.9 / versionCode 27.
+- This is a compile fix only; it does not validate the experimental Gree/Reetech protocol or claim physical AC compatibility.
