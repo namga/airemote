@@ -109,6 +109,7 @@ class MainActivity : Activity() {
             "Mitsubishi Electric" to BrandIrReference("38 kHz (tham khảo phổ biến)", "MITSUBISHI_AC / MITSUBISHI", "Có nhiều họ giao thức; không suy ra model chỉ từ hãng."),
             "Casper" to BrandIrReference("Chưa xác minh riêng cho Casper; 38 kHz chỉ là mốc tham khảo chung", "Chưa xác minh giao thức Casper riêng", "Có thể dùng nền tảng/OEM khác nhau tùy model."),
             "Midea" to BrandIrReference("38 kHz (tham khảo phổ biến)", "MIDEA / MIDEA24 / một số thiết bị tương thích COOLIX", "Không phải mọi model Midea đều dùng cùng biến thể."),
+            "Gree" to BrandIrReference("38 kHz (profile thử nghiệm)", "Gree/YAC-family (biến thể chưa xác minh)", "Ứng dụng IR Remote for All của bạn điều khiển Reetech khi chọn Gree. Encoder trong app này là profile thử nghiệm, chưa phải bản ghi tín hiệu thực tế."),
             "Reetech" to BrandIrReference("Chưa xác minh cho RT9-BM5; 38 kHz chỉ là mốc tham khảo chung", "Chưa xác minh giao thức Reetech RT9-BM5 / RC9-BM5", "Mi Remote trên Xiaomi 17 điều khiển model này khi chọn Midea; vì vậy Reetech được định tuyến thử qua encoder Midea. Đây là giả thuyết tương thích dựa trên quan sát người dùng, chưa xác minh dạng sóng."),
             "Daikin" to BrandIrReference("38 kHz (tham khảo phổ biến)", "DAIKIN và nhiều biến thể DAIKINxx", "Daikin có nhiều định dạng lệnh và độ dài gói khác nhau."),
             "LG" to BrandIrReference("38 kHz (tham khảo phổ biến)", "LG / LG2", "Biến thể giao thức phụ thuộc dòng remote/model.")
@@ -410,30 +411,28 @@ class MainActivity : Activity() {
     private fun transmit(brand: String, power: Boolean, temperature: Int, mode: String, fan: String): String {
         val manager = ir ?: return "Không phát hiện dịch vụ Consumer IR của Android."
         if (!manager.hasIrEmitter()) return "Android không phát hiện bộ phát IR. Chưa gửi lệnh."
-        // carrierFrequencies is advisory and may be null/empty on OEM ROMs. Xiaomi's
-        // stock remote working is strong practical evidence that the handset has an IR path;
-        // let ConsumerIrManager.transmit decide rather than rejecting the command pre-emptively.
-        val reetechMideaTrial = brand.equals("Reetech", ignoreCase = true)
-        if (!brand.equals("Midea", ignoreCase = true) && !brand.equals("Media", ignoreCase = true) && !reetechMideaTrial) {
+        // Android-native transmit path. Reetech tries Gree first because the user's working
+        // third-party app controls this exact unit when Gree is selected. This is a trial only.
+        val isReetech = brand.equals("Reetech", ignoreCase = true)
+        val isGree = brand.equals("Gree", ignoreCase = true)
+        val isMidea = brand.equals("Midea", ignoreCase = true) || brand.equals("Media", ignoreCase = true)
+        if (!isReetech && !isGree && !isMidea) {
             return "${brand}: encoder riêng chưa được tích hợp ở bản này. Chưa phát lệnh; không dùng giao thức của hãng khác."
         }
         return try {
-            val pattern = if (reetechMideaTrial) {
-                MideaIr.buildReetechPattern(power, temperature, mode, fan)
-            } else {
-                MideaIr.buildPattern(power, temperature, mode, fan)
+            val pattern = when {
+                isReetech || isGree -> GreeIr.buildExperimentalPattern(power, temperature, mode, fan)
+                else -> MideaIr.buildPattern(power, temperature, mode, fan)
             }
-            if (pattern.size > 1000 || pattern.sumOf { it.toLong() } >= 1_900_000L) {
-                return "Mẫu Midea vượt giới hạn phát an toàn của Android. Chưa phát."
-            }
-            manager.transmit(38000, pattern)
-            if (reetechMideaTrial) {
-                "Đã gửi lệnh thử cho Reetech RT9-BM5 / RC9-BM5 bằng biến thể Midea 38 kHz thử nghiệm (bit OEM bổ sung) dựa trên thông tin Mi Remote của bạn (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). API phát đã chạy; chỉ thử thực tế mới xác nhận máy lạnh nhận lệnh."
-            } else {
-                "Android đã hoàn tất lệnh phát IR Midea 38 kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). Điều này chỉ xác nhận API phát đã chạy, không xác nhận máy lạnh nhận lệnh. Nếu máy vẫn im lặng, có thể biến thể Midea khác với giao thức chuẩn đang được thử."
+            val carrier = if (isReetech || isGree) GreeIr.CARRIER_HZ else 38000
+            IrTransmitter.send(manager, carrier, pattern)
+            when {
+                isReetech -> "Đã phát lệnh THỬ cho Reetech RT9-BM5 bằng profile Gree/YAC-family 38 kHz (${temperature.coerceIn(16, 30)}°C, $mode, quạt $fan). Encoder chưa được xác minh với model này; nếu máy không phản hồi, không kết luận phần cứng hỏng."
+                isGree -> "Đã phát lệnh Gree bằng profile YAC-family thử nghiệm (${temperature.coerceIn(16, 30)}°C, $mode, quạt $fan). Biến thể Gree chưa được xác minh; chỉ phản hồi máy lạnh mới xác nhận tương thích."
+                else -> "Android đã phát lệnh Midea 38 kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). API hoàn tất không chứng minh máy lạnh nhận lệnh."
             }
         } catch (e: Exception) {
-            "Phát IR Midea thất bại: ${e.message ?: e.javaClass.simpleName}."
+            "Phát IR thất bại: ${e.message ?: e.javaClass.simpleName}."
         }
     }
 

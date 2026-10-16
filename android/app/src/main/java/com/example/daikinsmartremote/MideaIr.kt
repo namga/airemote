@@ -22,7 +22,7 @@ internal object MideaIr {
 
     /** Checks that the Celsius temperature byte has Fahrenheit/reserved bits cleared. */
     fun stateLayoutSelfTest(): Boolean {
-        val state = buildState(true, 27, "COOL", "AUTO", reetechUnknownBit = false)
+        val state = buildState(true, 27, "COOL", "AUTO")
         val tempByte = ((state ushr 24) and 0xFF).toInt()
         val headerByte = ((state ushr 40) and 0xFF).toInt()
         return tempByte == 10 && headerByte == 0xA1 && (state and 0xFF).toInt() == calcChecksum(state)
