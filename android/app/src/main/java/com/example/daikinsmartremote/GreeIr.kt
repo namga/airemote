@@ -49,7 +49,7 @@ internal object GreeIr {
         // Byte 3: unknown1=5 in upper nibble; Celsius and no extra degree.
         state[3] = 0x50
         // Byte 4: swing vertical last position, horizontal swing off.
-        state[4] = 0x00
+        state[4] = 0x01 // stateReset(): SwingV = kGreeSwingLastPos
         // Byte 5: unknown2=4 in bits 3..5; all optional features off.
         state[5] = 0x20
         state[6] = 0x00
@@ -66,11 +66,11 @@ internal object GreeIr {
         out += HEADER_MARK
         out += HEADER_SPACE
         for (byteIndex in 0..3) appendByteLsbFirst(out, state[byteIndex])
-        // Footer #1: 3-bit 010, then mark and long message gap.
-        appendBitsLsbFirst(out, 0b010, 3)
+        // Upstream sendGree() ends the first 4-byte block with a mark and
+        // long gap. There is no extra 3-bit footer between the two blocks.
         out += BIT_MARK
         out += MESSAGE_SPACE
-        // Block #2 has no header, and ends with mark + message gap.
+        // Second 4-byte block; finish with mark and long gap.
         for (byteIndex in 4..7) appendByteLsbFirst(out, state[byteIndex])
         out += BIT_MARK
         out += MESSAGE_SPACE

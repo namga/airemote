@@ -211,3 +211,11 @@ Corrected the Celsius temperature byte: bits 0–4 carry the offset from 17°C, 
 - Reworks the Kotlin Gree frame generator to match the upstream Gree state layout and LSB-first byte transmission used by IRremoteESP8266.
 - Keeps the existing Android ConsumerIrManager output and app UI.
 - Does not claim Reetech RT9-BM5 compatibility; test at 38 kHz first.
+
+
+## v1.5.16 Gree timing/frame correction
+- Compared the Kotlin frame generator against upstream IRremoteESP8266 `sendGree()` reference test.
+- Corrected frame boundary: 4 bytes, mark + 19980 us gap, then 4 bytes. Removed an extra 3-bit footer that is not present in the upstream reference frame.
+- Corrected default vertical swing state to `kGreeSwingLastPos` (byte 4 = 0x01), matching upstream `stateReset()` / reference power-on frame.
+- Carrier remains 38 kHz; model variants share this frame timing in the reference implementation.
+- Reetech RT9-BM5 compatibility remains unverified; build and test on device.
