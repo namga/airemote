@@ -205,3 +205,9 @@ Corrected the Celsius temperature byte: bits 0–4 carry the offset from 17°C, 
 - Uses the Gree/Kelvinator block checksum rule, standard 38 kHz carrier, two 32-bit blocks, 3-bit B010 mid-frame footer, and ~19.98 ms gaps.
 - This corrects the encoder implementation against the published protocol layout; it does not prove the Reetech RT9-BM5 uses this Gree variant.
 - Test Power first, then Cool at 24 C. If no response, stop and report the result rather than randomizing carrier frequencies.
+
+
+## v1.5.15 Gree frame fix
+- Reworks the Kotlin Gree frame generator to match the upstream Gree state layout and LSB-first byte transmission used by IRremoteESP8266.
+- Keeps the existing Android ConsumerIrManager output and app UI.
+- Does not claim Reetech RT9-BM5 compatibility; test at 38 kHz first.

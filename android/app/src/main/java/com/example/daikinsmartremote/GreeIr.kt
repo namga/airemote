@@ -1,9 +1,9 @@
 package com.example.daikinsmartremote
 
 /**
- * Kotlin port of the standard 64-bit Gree frame layout/timing from
- * IRremoteESP8266 IRGreeAC. This is a protocol-accurate Gree encoder port,
- * but Reetech RT9-BM5 compatibility is not confirmed.
+ * Kotlin port of IRremoteESP8266 GreeProtocol state layout and sendGree framing.
+ * Protocol layout is based on the upstream IRGreeAC implementation.
+ * Reetech RT9-BM5 compatibility remains unverified.
  */
 internal object GreeIr {
     const val CARRIER_HZ = 38_000
@@ -21,7 +21,6 @@ internal object GreeIr {
         fan: String,
         model: String = "YAW1F"
     ): IntArray {
-        // IRGreeAC::stateReset() defaults: Auto, off, fan auto, 25C, light on.
         val state = IntArray(8)
         val temp = temperature.coerceIn(16, 30)
         val modeBits = when (mode.uppercase()) {
@@ -29,6 +28,7 @@ internal object GreeIr {
             "DRY" -> 2
             "FAN" -> 3
             "HEAT" -> 4
+            "ECONO", "ECO" -> 5
             else -> 0
         }
         val fanBits = when (fan.uppercase()) {
@@ -38,52 +38,50 @@ internal object GreeIr {
             else -> 0
         }
 
-        // GreeProtocol bitfield layout, byte 0 (LSB-first field positions).
+        // GreeProtocol bitfields are LSB-first within each byte.
         state[0] = (modeBits and 0x07) or
             ((if (power) 1 else 0) shl 3) or
             ((fanBits and 0x03) shl 4) or
-            (1 shl 6) // SwingAuto default
-        // Byte 1: temperature is encoded as Celsius - 16.
+            (1 shl 6) // SwingAuto
         state[1] = (temp - 16) and 0x0F
-        // Byte 2: light on by default; YAW1F model bit is set only when powered on.
-        state[2] = (1 shl 5) or
-            ((if (power && model == "YAW1F") 1 else 0) shl 6)
-        // Byte 3: unknown nibble must be 0b0101.
+        // Byte 2: TimerHours=0, Turbo=0, Light=1, ModelA=bit 6, Xfan=0.
+        state[2] = (1 shl 5) or ((if (power && model == "YAW1F") 1 else 0) shl 6)
+        // Byte 3: unknown1=5 in upper nibble; Celsius and no extra degree.
         state[3] = 0x50
-        // Byte 4: default vertical swing last-position, horizontal swing off.
+        // Byte 4: swing vertical last position, horizontal swing off.
         state[4] = 0x00
-        // Byte 5: unknown2 field is 0b100 (bits 3..5), matching IRGreeAC reset.
+        // Byte 5: unknown2=4 in bits 3..5; all optional features off.
         state[5] = 0x20
         state[6] = 0x00
-        // Byte 7: checksum in upper nibble; checksum is set below.
+        state[7] = 0x00
 
-        // IRKelvinatorAC::calcBlockChecksum() used by Gree:
-        // start at 10, sum low nibbles of bytes 0..3, then high nibbles 4..6.
+        // Same block checksum used by IRKelvinatorAC::calcBlockChecksum().
         var sum = 10
         for (i in 0..3) sum += state[i] and 0x0F
         for (i in 4..6) sum += (state[i] ushr 4) and 0x0F
         state[7] = (sum and 0x0F) shl 4
 
-        val out = ArrayList<Int>(140)
+        val out = ArrayList<Int>(150)
+        // Upstream sendGree(data[], nbytes) sends each byte LSB-first.
         out += HEADER_MARK
         out += HEADER_SPACE
-        // First 32-bit block.
-        for (byteIndex in 0..3) appendByte(out, state[byteIndex])
-        // Mandatory 3-bit mid-message footer B010, MSB first, followed by gap.
-        appendBits(out, 0b010, 3)
+        for (byteIndex in 0..3) appendByteLsbFirst(out, state[byteIndex])
+        // Footer #1: 3-bit 010, then mark and long message gap.
+        appendBitsLsbFirst(out, 0b010, 3)
         out += BIT_MARK
         out += MESSAGE_SPACE
-        // Second 32-bit block; the standard protocol ends with a mark and gap.
-        for (byteIndex in 4..7) appendByte(out, state[byteIndex])
+        // Block #2 has no header, and ends with mark + message gap.
+        for (byteIndex in 4..7) appendByteLsbFirst(out, state[byteIndex])
         out += BIT_MARK
         out += MESSAGE_SPACE
         return out.toIntArray()
     }
 
-    private fun appendByte(out: MutableList<Int>, value: Int) = appendBits(out, value, 8)
+    private fun appendByteLsbFirst(out: MutableList<Int>, value: Int) =
+        appendBitsLsbFirst(out, value, 8)
 
-    private fun appendBits(out: MutableList<Int>, value: Int, bits: Int) {
-        for (bit in bits - 1 downTo 0) {
+    private fun appendBitsLsbFirst(out: MutableList<Int>, value: Int, bits: Int) {
+        for (bit in 0 until bits) {
             out += BIT_MARK
             out += if (((value ushr bit) and 1) != 0) ONE_SPACE else ZERO_SPACE
         }
