@@ -1,4 +1,11 @@
-# Universal AC Remote v1.5.9 — Kotlin build fix (protocol unverified)
+## v1.5.12 fix
+
+- Fixed the missing carrier-frequency selector in the Android APK: copied the current web UI (`index.html`, `app.js`, CSS, manifest and icons) into Android bundled assets. Previously the web version had the selector, but the APK bundled older assets and did not show it.
+- The selector in the room control section offers 36, 38, 40 and 56 kHz and calls the Android `setCarrierFrequency()` bridge. Selected frequency is saved in Android preferences and used by the native transmit path; unsupported frequencies are rejected when the Android API reports supported ranges.
+- Bumped Android version to 1.5.12 / versionCode 30 and PWA cache to v8.
+- This is a UI/wiring fix only. It does not prove the Reetech RT9-BM5 protocol or carrier frequency. No physical device test was performed.
+
+# Universal AC Remote v1.5.12 — Carrier selector wired into Android APK
 
 ## Important fix for the “button does nothing” report
 

@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s);
-const defaults={power:false,temp:24,mode:"COOL",fan:"AUTO",brand:"Daikin",accent:"ocean",fontSize:"normal"};
+const defaults={power:false,temp:24,mode:"COOL",fan:"AUTO",brand:"Daikin",irCarrier:38000,accent:"ocean",fontSize:"normal"};
 const state={...defaults};
 try{Object.assign(state,JSON.parse(localStorage.getItem("daikin-state")||"{}"))}catch{}
 function save(){localStorage.setItem("daikin-state",JSON.stringify(state));render()}
@@ -16,7 +16,7 @@ function applyAppearance(){
   document.querySelectorAll("[data-font]").forEach(b=>{const selected=b.dataset.font===size;b.classList.toggle("selected",selected);b.setAttribute("aria-pressed",String(selected))});
 }
 function render(){
-  $("#brand").value=state.brand||"Daikin";$("#temp").textContent=state.temp;
+  $("#brand").value=state.brand||"Daikin";$("#irCarrier").value=String(state.irCarrier||38000);$("#temp").textContent=state.temp;
   $("#status").textContent=state.power?`Đang bật · ${{COOL:"Làm lạnh",DRY:"Hút ẩm",FAN:"Quạt",HEAT:"Sưởi"}[state.mode]}`:"Máy lạnh đang tắt";
   $("#powerText").textContent=state.power?"Tắt máy lạnh":"Bật máy lạnh";$("#power").classList.toggle("off",!state.power);$("#power").setAttribute("aria-pressed",String(state.power));$("#power").setAttribute("aria-label",state.power?"Tắt máy lạnh":"Bật máy lạnh");
   $("#trackfill").style.width=((state.temp-16)/14*100)+"%";
@@ -24,7 +24,7 @@ function render(){
   document.querySelectorAll("[data-fan]").forEach(b=>{const selected=b.dataset.fan===state.fan;b.classList.toggle("selected",selected);b.setAttribute("aria-pressed",String(selected))});
   applyAppearance();
 }
-$("#minus").onclick=()=>{state.temp=Math.max(16,state.temp-1);save()};$("#plus").onclick=()=>{state.temp=Math.min(30,state.temp+1);save()};$("#brand").onchange=e=>{state.brand=e.target.value;save();if(window.AndroidACRemote&&typeof window.AndroidACRemote.setBrand==="function"){try{window.AndroidACRemote.setBrand(state.brand)}catch{}}$("#hint").textContent="Đã chọn "+state.brand+(window.AndroidACRemote?" · nhấn Kiểm tra IR để xem tần số tham khảo":" · web không phát IR trực tiếp")};$("#power").onclick=()=>{state.power=!state.power;save();
+$("#minus").onclick=()=>{state.temp=Math.max(16,state.temp-1);save()};$("#plus").onclick=()=>{state.temp=Math.min(30,state.temp+1);save()};$("#brand").onchange=e=>{state.brand=e.target.value;save();if(window.AndroidACRemote&&typeof window.AndroidACRemote.setBrand==="function"){try{window.AndroidACRemote.setBrand(state.brand)}catch{}}$("#hint").textContent="Đã chọn "+state.brand+(window.AndroidACRemote?" · nhấn Kiểm tra IR để xem tần số tham khảo":" · web không phát IR trực tiếp")};$("#irCarrier").onchange=e=>{state.irCarrier=Number(e.target.value)||38000;save();if(window.AndroidACRemote&&typeof window.AndroidACRemote.setCarrierFrequency==="function"){try{$("#hint").textContent=window.AndroidACRemote.setCarrierFrequency(state.irCarrier)}catch{$("#hint").textContent="Đã chọn "+(state.irCarrier/1000)+" kHz; chưa xác minh phát được."}}else{$("#hint").textContent="Đã chọn "+(state.irCarrier/1000)+" kHz; chỉ APK Android mới phát IR."}};$("#power").onclick=()=>{state.power=!state.power;save();
   if(window.AndroidACRemote && typeof window.AndroidACRemote.sendState === "function"){
     try { const result=window.AndroidACRemote.sendState(JSON.stringify(state)); $("#hint").textContent=result || "Đã xử lý yêu cầu · xem kết quả kiểm tra IR"; }
     catch(e){ $("#hint").textContent="Không thể gửi lệnh IR trên thiết bị này."; }
