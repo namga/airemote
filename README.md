@@ -178,3 +178,9 @@ Corrected the Celsius temperature byte: bits 0–4 carry the offset from 17°C, 
 - Fixed the missing `reetechUnknownBit` argument in `MideaIr.stateLayoutSelfTest()` that caused `:app:compileDebugKotlin` to fail.
 - Bumped Android version to 1.5.9 / versionCode 27.
 - This is a compile fix only; it does not validate the experimental Gree/Reetech protocol or claim physical AC compatibility.
+
+
+## v1.5.11 — thử tần số sóng mang IR
+- APK có lựa chọn 36, 38, 40 và 56 kHz. Lựa chọn được dùng cho cả nút Test nhanh phát IR và lệnh điều khiển.
+- APK kiểm tra dải tần do Android ConsumerIrManager báo; nếu báo rõ tần số không được hỗ trợ thì không phát lệnh ở tần số đó.
+- Đây chỉ là thử tần số sóng mang; encoder Gree thử nghiệm/Midea hiện có vẫn chưa được xác minh bằng tín hiệu thu thực tế cho Reetech RT9-BM5. API phát thành công không chứng minh máy lạnh nhận lệnh.

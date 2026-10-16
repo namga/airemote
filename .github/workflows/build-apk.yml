@@ -38,15 +38,15 @@ jobs:
           APK="app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n1)/aapt"
           "$AAPT" dump badging "$APK" | tee apk-metadata.txt
-          grep -q "versionName='1.5.10'" apk-metadata.txt
-          grep -q "versionCode='28'" apk-metadata.txt
+          grep -q "versionName='1.5.11'" apk-metadata.txt
+          grep -q "versionCode='29'" apk-metadata.txt
           mkdir -p ../verified-apk
-          cp "$APK" ../verified-apk/UniversalACRemote-v1.5.10.apk
-          sha256sum ../verified-apk/UniversalACRemote-v1.5.10.apk | tee ../verified-apk/SHA256.txt
+          cp "$APK" ../verified-apk/UniversalACRemote-v1.5.11.apk
+          sha256sum ../verified-apk/UniversalACRemote-v1.5.11.apk | tee ../verified-apk/SHA256.txt
           cp apk-metadata.txt ../verified-apk/APK-METADATA.txt
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: UniversalACRemote-v1.5.10-run-${{ github.run_number }}
+          name: UniversalACRemote-v1.5.11-run-${{ github.run_number }}
           path: verified-apk/*
           if-no-files-found: error

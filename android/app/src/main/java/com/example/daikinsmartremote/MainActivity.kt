@@ -143,23 +143,38 @@ class MainActivity : Activity() {
             }
         }
 
+        @JavascriptInterface
+        fun setCarrierFrequency(frequency: Int): String {
+            if (frequency !in listOf(36000, 38000, 40000, 56000)) return "Chỉ hỗ trợ lựa chọn thử 36/38/40/56 kHz."
+            prefs.edit().putInt("ir_carrier_frequency", frequency).apply()
+            val ranges = ir?.carrierFrequencies
+            val supported = ranges?.any { frequency in it.minFrequency..it.maxFrequency }
+            return when (supported) {
+                true -> "Đã chọn ${frequency / 1000} kHz; Android báo dải tần này được hỗ trợ. Bấm nút nguồn để thử lệnh."
+                false -> "Đã lưu ${frequency / 1000} kHz nhưng Android không báo hỗ trợ tần số này; lệnh sẽ không được phát ở tần số đó."
+                null -> "Đã lưu ${frequency / 1000} kHz nhưng không đọc được dải tần phần cứng; cần kiểm tra khi phát."
+            }
+        }
+
         /** Short harmless carrier burst for a quick emitter-path check; not an AC command. */
         @JavascriptInterface
         fun testIrPulse(): String {
             val manager = ir ?: return "TEST IR: Android không cung cấp dịch vụ Consumer IR. Chưa phát."
             return try {
                 if (!manager.hasIrEmitter()) return "TEST IR: Android không phát hiện IR emitter. Chưa phát."
+                val selectedFrequency = prefs.getInt("ir_carrier_frequency", 38000)
                 val ranges = manager.carrierFrequencies
-                val frequencySupported = ranges?.any { 38000 in it.minFrequency..it.maxFrequency }
-                // Short generic pulse train. This only checks the Android transmit path; it is not a valid Midea command.
+                val frequencySupported = ranges?.any { selectedFrequency in it.minFrequency..it.maxFrequency }
+                if (frequencySupported == false) return "TEST IR: Android không báo hỗ trợ ${selectedFrequency / 1000} kHz; không phát burst. Hãy chọn tần số khác."
+                // Short generic pulse train. This only checks the Android transmit path; it is not an AC command.
                 val testPattern = intArrayOf(9000, 4500, 560, 560, 560, 1690, 560, 560, 560, 1690, 560, 560, 560, 1690, 560, 560)
-                manager.transmit(38000, testPattern)
+                manager.transmit(selectedFrequency, testPattern)
                 val carrierNote = when (frequencySupported) {
-                    true -> "Android báo dải tần có 38 kHz."
-                    false -> "Android không báo dải 38 kHz; burst vẫn được gửi để kiểm tra API."
-                    null -> "Android không trả được dải tần; burst vẫn được gửi để kiểm tra API."
+                    true -> "Android báo dải tần có ${selectedFrequency / 1000} kHz."
+                    null -> "Android không trả được dải tần; API vẫn nhận yêu cầu phát."
+                    false -> ""
                 }
-                "TEST IR: API transmit() đã hoàn tất burst 38 kHz ngắn. $carrierNote Đây KHÔNG phải lệnh điều hòa. Hãy dùng camera điện thoại khác (ưu tiên camera trước) nhìn vào cửa sổ IR khi bấm test; nếu thấy chớp sáng chỉ xác nhận có phát quang IR, không xác nhận giao thức Reetech hay mã điều hòa đúng."
+                "TEST IR: API transmit() đã hoàn tất burst ${selectedFrequency / 1000} kHz ngắn. $carrierNote Đây KHÔNG phải lệnh điều hòa. Hãy dùng camera điện thoại khác (ưu tiên camera trước) nhìn vào cửa sổ IR khi bấm test; nếu thấy chớp sáng chỉ xác nhận có phát quang IR, không xác nhận giao thức Reetech hay mã điều hòa đúng."
             } catch (e: Exception) {
                 "TEST IR thất bại: ${e.message ?: e.javaClass.simpleName}"
             }
@@ -424,12 +439,16 @@ class MainActivity : Activity() {
                 isReetech || isGree -> GreeIr.buildExperimentalPattern(power, temperature, mode, fan)
                 else -> MideaIr.buildPattern(power, temperature, mode, fan)
             }
-            val carrier = if (isReetech || isGree) GreeIr.CARRIER_HZ else 38000
+            val carrier = prefs.getInt("ir_carrier_frequency", 38000)
+            val ranges = manager.carrierFrequencies
+            if (ranges != null && ranges.isNotEmpty() && ranges.none { carrier in it.minFrequency..it.maxFrequency }) {
+                return "Không phát lệnh: Android không báo hỗ trợ ${carrier / 1000} kHz. Chọn tần số khác ở mục Tần số sóng mang IR."
+            }
             IrTransmitter.send(manager, carrier, pattern)
             when {
-                isReetech -> "Đã phát lệnh THỬ cho Reetech RT9-BM5 bằng profile Gree/YAC-family 38 kHz (${temperature.coerceIn(16, 30)}°C, $mode, quạt $fan). Encoder chưa được xác minh với model này; nếu máy không phản hồi, không kết luận phần cứng hỏng."
-                isGree -> "Đã phát lệnh Gree bằng profile YAC-family thử nghiệm (${temperature.coerceIn(16, 30)}°C, $mode, quạt $fan). Biến thể Gree chưa được xác minh; chỉ phản hồi máy lạnh mới xác nhận tương thích."
-                else -> "Android đã phát lệnh Midea 38 kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). API hoàn tất không chứng minh máy lạnh nhận lệnh."
+                isReetech -> "Đã phát lệnh THỬ cho Reetech RT9-BM5 bằng profile Gree/YAC-family ${carrier / 1000} kHz (${temperature.coerceIn(16, 30)}°C, $mode, quạt $fan). Encoder chưa được xác minh với model này; nếu máy không phản hồi, không kết luận phần cứng hỏng."
+                isGree -> "Đã phát lệnh Gree bằng profile YAC-family thử nghiệm ${carrier / 1000} kHz (${temperature.coerceIn(16, 30)}°C, $mode, quạt $fan). Biến thể Gree chưa được xác minh; chỉ phản hồi máy lạnh mới xác nhận tương thích."
+                else -> "Android đã phát lệnh Midea ${carrier / 1000} kHz (${temperature.coerceIn(17, 30)}°C, $mode, quạt $fan). API hoàn tất không chứng minh máy lạnh nhận lệnh."
             }
         } catch (e: Exception) {
             "Phát IR thất bại: ${e.message ?: e.javaClass.simpleName}."
