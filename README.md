@@ -198,3 +198,10 @@ Corrected the Celsius temperature byte: bits 0–4 carry the offset from 17°C, 
 - The selector is passed to the Android IR encoder; YAW1F sets the Gree ModelA bit, while YBOFB/YX1FSF clear it.
 - This is an experimental variant test, not a captured Reetech RT9-BM5 profile. The current Gree timing/state encoder remains experimental and has not been verified against the physical AC.
 - Build with GitHub Actions; check the workflow log and test each variant at a fixed 38 kHz first.
+
+
+## v1.5.14 Gree encoder correction
+- Replaced the previous placeholder byte map with the standard Gree 8-byte state layout from IRremoteESP8266 IRGreeAC.
+- Uses the Gree/Kelvinator block checksum rule, standard 38 kHz carrier, two 32-bit blocks, 3-bit B010 mid-frame footer, and ~19.98 ms gaps.
+- This corrects the encoder implementation against the published protocol layout; it does not prove the Reetech RT9-BM5 uses this Gree variant.
+- Test Power first, then Cool at 24 C. If no response, stop and report the result rather than randomizing carrier frequencies.
