@@ -213,9 +213,8 @@ Corrected the Celsius temperature byte: bits 0–4 carry the offset from 17°C, 
 - Does not claim Reetech RT9-BM5 compatibility; test at 38 kHz first.
 
 
-## v1.5.16 Gree timing/frame correction
-- Compared the Kotlin frame generator against upstream IRremoteESP8266 `sendGree()` reference test.
-- Corrected frame boundary: 4 bytes, mark + 19980 us gap, then 4 bytes. Removed an extra 3-bit footer that is not present in the upstream reference frame.
-- Corrected default vertical swing state to `kGreeSwingLastPos` (byte 4 = 0x01), matching upstream `stateReset()` / reference power-on frame.
-- Carrier remains 38 kHz; model variants share this frame timing in the reference implementation.
-- Reetech RT9-BM5 compatibility remains unverified; build and test on device.
+## v1.5.17 Gree reference-frame correction
+- Restores the 3-bit `010` Gree block footer between the first four bytes and the second block, as shown in the upstream IRremoteESP8266 `sendGree()` test.
+- Keeps the corrected default vertical swing position (`state[4] = 0x01`).
+- This is a reference-frame correction only. It does not establish that Reetech RT9-BM5 accepts standard Gree frames.
+- Android build and physical AC operation have not been verified here.
