@@ -15,13 +15,13 @@ internal object GreeIr {
     private const val ZERO_SPACE = 540
     private const val FOOTER_SPACE = 19000
 
-    fun buildExperimentalPattern(power: Boolean, temperature: Int, mode: String, fan: String): IntArray {
+    fun buildExperimentalPattern(power: Boolean, temperature: Int, mode: String, fan: String, model: String = "YAW1F"): IntArray {
         // Generic 8-byte Gree-family state skeleton. Keep this isolated and labelled
         // experimental because OEM state layout/checksum may differ from this model.
         val state = IntArray(8)
         state[0] = 0x00
         state[1] = 0x09
-        state[2] = 0x20
+        state[2] = if (model == "YAW1F") 0x60 else 0x20 // ModelA bit: YAW1F vs YBOFB/YX1FSF
         state[3] = ((temperature.coerceIn(16, 30) - 16) and 0x0F) shl 4
         val modeBits = when (mode.uppercase()) {
             "COOL" -> 0x03

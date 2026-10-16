@@ -191,3 +191,10 @@ Corrected the Celsius temperature byte: bits 0–4 carry the offset from 17°C, 
 - APK có lựa chọn 36, 38, 40 và 56 kHz. Lựa chọn được dùng cho cả nút Test nhanh phát IR và lệnh điều khiển.
 - APK kiểm tra dải tần do Android ConsumerIrManager báo; nếu báo rõ tần số không được hỗ trợ thì không phát lệnh ở tần số đó.
 - Đây chỉ là thử tần số sóng mang; encoder Gree thử nghiệm/Midea hiện có vẫn chưa được xác minh bằng tín hiệu thu thực tế cho Reetech RT9-BM5. API phát thành công không chứng minh máy lạnh nhận lệnh.
+
+
+## v1.5.13 Gree variant test
+- Adds a Gree model selector: YAW1F, YBOFB, YX1FSF.
+- The selector is passed to the Android IR encoder; YAW1F sets the Gree ModelA bit, while YBOFB/YX1FSF clear it.
+- This is an experimental variant test, not a captured Reetech RT9-BM5 profile. The current Gree timing/state encoder remains experimental and has not been verified against the physical AC.
+- Build with GitHub Actions; check the workflow log and test each variant at a fixed 38 kHz first.

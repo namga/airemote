@@ -144,6 +144,14 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
+        fun setGreeModel(model: String): String {
+            val valid = model in setOf("YAW1F", "YBOFB", "YX1FSF")
+            if (!valid) return "Biến thể Gree không hợp lệ."
+            prefs.edit().putString("gree_model", model).apply()
+            return "Đã chọn biến thể Gree $model (thử nghiệm). Đây chưa phải xác nhận tương thích Reetech."
+        }
+
+        @JavascriptInterface
         fun setCarrierFrequency(frequency: Int): String {
             if (frequency !in listOf(36000, 38000, 40000, 56000)) return "Chỉ hỗ trợ lựa chọn thử 36/38/40/56 kHz."
             prefs.edit().putInt("ir_carrier_frequency", frequency).apply()
@@ -436,7 +444,7 @@ class MainActivity : Activity() {
         }
         return try {
             val pattern = when {
-                isReetech || isGree -> GreeIr.buildExperimentalPattern(power, temperature, mode, fan)
+                isReetech || isGree -> GreeIr.buildExperimentalPattern(power, temperature, mode, fan, prefs.getString("gree_model", "YAW1F") ?: "YAW1F")
                 else -> MideaIr.buildPattern(power, temperature, mode, fan)
             }
             val carrier = prefs.getInt("ir_carrier_frequency", 38000)
